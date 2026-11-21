@@ -3,7 +3,8 @@
   if (window.BAN_DEMO) return;
   const $ = s => document.querySelector(s);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const ds = window.YCCD || [];
+  const soBai = b => +((b.bai.match(/\d+/) || [0])[0]);
+  const ds = (window.YCCD || []).slice().sort((a, b) => a.lop - b.lop || soBai(a) - soBai(b));
   const selLop = $("#yccd-lop"), selBai = $("#yccd-bai");
   if (!selLop) return;
   const lops = [...new Set(ds.map(b => b.lop))].sort((a, b) => a - b);
