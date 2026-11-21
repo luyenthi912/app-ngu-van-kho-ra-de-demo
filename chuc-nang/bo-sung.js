@@ -9,7 +9,7 @@
 
   // Bản demo: khóa khu bổ sung.
   if (window.BAN_DEMO) {
-    document.querySelectorAll("[data-man=bo-sung], #nut-nhap-moi").forEach(b => {
+    document.querySelectorAll("[data-man=bo-sung], [data-man=ra-de], #nut-nhap-moi").forEach(b => {
       b.textContent = "🔒 " + b.textContent.replace(/^\+ /, "");
       b.onclick = () => thongBao("Có trong bản đầy đủ");
     });
@@ -21,8 +21,7 @@
 
   // ---------- Chuyển màn hình ----------
   function moMan(ten) {
-    $("#man-kho").hidden = ten !== "kho";
-    $("#man-bo-sung").hidden = ten !== "bo-sung";
+    document.querySelectorAll("main[id^=man-]").forEach(m => m.hidden = m.id !== "man-" + ten);
     document.querySelectorAll("[data-man]").forEach(b => b.classList.toggle("dang-chon", b.dataset.man === ten));
     if (ten === "bo-sung") veHangCho();
     window.scrollTo(0, 0);

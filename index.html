@@ -12,7 +12,7 @@
   <nav class="phan-app">
     <button data-man="kho" class="dang-chon">Kho ngữ liệu</button>
     <button data-man="bo-sung">Bổ sung ngữ liệu</button>
-    <button data-sap-co>🔒 Ra đề</button>
+    <button data-man="ra-de">Ra đề</button>
     <button id="nut-nhap-moi" class="nut-vang">+ Nhập ngữ liệu mới</button>
   </nav>
 </header>
@@ -60,6 +60,17 @@
     <ul id="da-bo-sung" class="ds-bs"></ul>
   </section>
   <section id="khung-form"></section>
+</main>
+
+<main class="khung" id="man-ra-de" hidden>
+  <section class="hop">
+    <h2>Ra đề: khung đề</h2>
+    <p class="phu">Chọn một khung để xem bảng vị trí câu. Khung mẫu chỉ xem; bấm "Nhân bản thành khung riêng" để sửa theo khung của trường. Màn hình soạn đề ba cột sẽ có ở các việc sau.</p>
+  </section>
+  <div class="hai-cot">
+    <aside class="hop"><h3>Danh sách khung</h3><ul id="ds-khung" class="ds-khung"></ul></aside>
+    <section class="hop" id="chi-tiet-khung"></section>
+  </div>
 </main>
 
 <div id="man-the" hidden>

@@ -272,5 +272,7 @@
     dsThe(kemNhap) { return kemNhap ? KHO.concat(D.docTuBoSung().filter(t => t.nhap)) : KHO; },
     thongBao, moThe
   };
+  // Điện thoại: bộ lọc thu gọn sẵn để danh sách thẻ hiện ngay, bấm "Bộ lọc" mới mở ra.
+  if (window.matchMedia("(max-width: 760px)").matches) $(".bo-loc details").open = false;
   veTatCa();
 })();

@@ -121,14 +121,36 @@ button { font: inherit; cursor: pointer; }
 .xem-anh img { display: block; max-width: 160px; max-height: 220px; border: 1px solid var(--vien); }
 .thanh-luu { position: sticky; bottom: 0; background: var(--giay); padding: 10px 0; border-top: 1px solid var(--vien); }
 
+.ds-khung { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 6px; }
+.dong-khung { width: 100%; text-align: left; display: flex; flex-direction: column; gap: 2px; background: #fff; border: 1px solid var(--vien); border-radius: 8px; padding: 8px 10px; }
+.dong-khung.dang-chon { border-color: var(--xanh); background: var(--xanh-nhat); }
+.thong-tin-khung { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; font-size: 15px; }
+.thong-tin-khung dt { color: var(--chu-phu); }
+.thong-tin-khung dd { margin: 0; }
+.cuon-ngang { overflow-x: auto; }
+.bang-khung { border-collapse: collapse; width: 100%; font-size: 14px; margin: 10px 0; }
+.bang-khung th, .bang-khung td { border: 1px solid var(--vien); padding: 5px 7px; text-align: left; vertical-align: top; }
+.bang-khung th { background: var(--xanh-nhat); color: var(--xanh); }
+.bang-khung tfoot td { background: var(--nen); }
+.o-nho { font: inherit; padding: 3px 6px; border: 1px solid var(--vien); border-radius: 4px; }
+.o-ten { font: inherit; width: 100%; padding: 4px 8px; border: 1px solid var(--vien); border-radius: 6px; }
+.ket-qua-kiem-tra { border-radius: 8px; padding: 10px 14px; margin-top: 10px; font-size: 14px; }
+.ket-qua-kiem-tra ul { margin: 6px 0 0; padding-left: 18px; }
+.ket-qua-kiem-tra.dat { background: #EEF6EA; color: #2E6B1F; }
+.ket-qua-kiem-tra.co-loi { background: #FCE8E6; color: var(--do); }
+#man-ra-de .hai-cot { grid-template-columns: 300px 1fr; }
+
 #thong-bao { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--chu); color: #fff; padding: 10px 18px; border-radius: 8px; z-index: 20; max-width: calc(100% - 32px); }
 
 @media (max-width: 760px) {
   .hai-cot { grid-template-columns: 1fr; }
   .bo-loc { position: static; max-height: none; }
+  .bo-loc summary { padding: 4px 0; }
+  .bo-loc details:not([open]) summary::after { content: " (bấm để mở)"; font-weight: 400; color: var(--chu-phu); font-size: 14px; }
   .the { padding: 20px 16px; }
   #o-loi-vao label, #o-loi-vao select { width: 100%; }
   .luoi-2 { grid-template-columns: 1fr; }
+  #man-ra-de .hai-cot { grid-template-columns: 1fr; }
   .dong-lap { flex-wrap: wrap; }
   .dong-lop select[data-f=bai] { max-width: none; flex: 1 1 100%; width: 100% !important; }
 }
