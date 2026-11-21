@@ -154,3 +154,6 @@ button { font: inherit; cursor: pointer; }
   .dong-lap { flex-wrap: wrap; }
   .dong-lop select[data-f=bai] { max-width: none; flex: 1 1 100%; width: 100% !important; }
 }
+.hang-loc { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.ds-yccd { list-style: none; padding: 0; display: grid; gap: 8px; }
+.ds-yccd li { background: #fff; border: 1px solid var(--vien); border-radius: 8px; padding: 8px 10px; }
