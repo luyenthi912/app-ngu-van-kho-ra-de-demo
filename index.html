@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kho ngữ liệu Ngữ văn (bản dùng thử)</title>
+<link rel="stylesheet" href="giao-dien/app.css">
+</head>
+<body>
+<header class="dau-trang">
+  <div class="ten-app">Kho ngữ liệu Ngữ văn</div>
+  <nav class="phan-app">
+    <button data-man="kho" class="dang-chon">Kho ngữ liệu</button>
+    <button data-man="bo-sung">Bổ sung ngữ liệu</button>
+    <button data-sap-co>🔒 Ra đề</button>
+    <button id="nut-nhap-moi" class="nut-vang">+ Nhập ngữ liệu mới</button>
+  </nav>
+</header>
+
+<main class="khung" id="man-kho">
+  <section class="loi-vao-khung">
+    <div class="loi-vao">
+      <button data-loi="bai">Ra đề theo bài</button>
+      <button data-loi="de_tai">Tìm theo đề tài</button>
+      <button data-loi="tim">Ô tìm kiếm</button>
+    </div>
+    <div id="o-loi-vao"></div>
+  </section>
+
+  <div class="hai-cot">
+    <aside class="bo-loc">
+      <details open>
+        <summary>Bộ lọc<span id="dem-loc"></span></summary>
+        <button id="xoa-loc" class="nut-phu" hidden>Bỏ hết bộ lọc</button>
+        <div id="bo-loc-noi-dung"></div>
+      </details>
+    </aside>
+    <section class="ket-qua-khung">
+      <p class="dem" id="dem-ket-qua"></p>
+      <ul id="ket-qua"></ul>
+    </section>
+  </div>
+</main>
+
+<main class="khung" id="man-bo-sung" hidden>
+  <section class="hop">
+    <div class="hang-tieu-de">
+      <h2>Bổ sung ngữ liệu</h2>
+      <div class="hang-nut">
+        <button class="nut-chinh" id="mo-form-moi">+ Nhập ngữ liệu mới</button>
+        <button class="nut-phu" id="xuat-file">Xuất file sao lưu</button>
+        <label class="nut-phu nut-file">Nhập từ file sao lưu<input type="file" id="nhap-file" accept=".json,application/json" hidden></label>
+      </div>
+    </div>
+    <p class="phu">Thẻ cô nhập được lưu trong trình duyệt của máy này. Nên bấm "Xuất file sao lưu" sau mỗi buổi nhập để giữ một bản trên ổ đĩa.</p>
+    <h3>Hàng chờ (<span id="dem-hang-cho">0</span>)</h3>
+    <p class="phu">Thẻ lưu nháp, chưa hiện khi tìm ngữ liệu.</p>
+    <ul id="hang-cho" class="ds-bs"></ul>
+    <h3>Đã bổ sung vào kho (<span id="dem-da-bo-sung">0</span>)</h3>
+    <ul id="da-bo-sung" class="ds-bs"></ul>
+  </section>
+  <section id="khung-form"></section>
+</main>
+
+<div id="man-the" hidden>
+  <article class="the">
+    <button id="dong-the" class="nut-dong" aria-label="Đóng">✕</button>
+    <div id="the-noi-dung"></div>
+  </article>
+</div>
+
+<div id="thong-bao" hidden></div>
+
+<script>window.BAN_DEMO = true;</script>
+<script src="kho/lo-000-the-thu.js"></script>
+<script src="kho/danh-muc-sgk.js"></script>
+<script src="chuc-nang/du-lieu.js"></script>
+<script src="chuc-nang/kho.js"></script>
+<script src="chuc-nang/bo-sung.js"></script>
+</body>
+</html>
