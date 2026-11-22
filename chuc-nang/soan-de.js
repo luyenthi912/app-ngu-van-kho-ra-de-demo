@@ -209,7 +209,7 @@
       ${moNH === c.id ? `<div class="hop-nh">${nh.map(q => {
         const o = dungO(q);
         return `<div class="nh-cau ${o && o.id !== c.id ? "da-dung" : ""}"><div class="nh-dau"><span class="the-muc muc-${LOP_MUC[q.muc] || "vdc"}">${esc(q.muc)}</span>
-          <span class="nho">${esc(q.ma)} · ${esc(q.trang_thai_duyet)}${o ? " · đang dùng ở " + esc(o.phan) + " câu " + o.so : ""}</span></div>
+          <span class="nho">${esc(q.ma)}${q.tv ? " · câu Tiếng Việt" : ""} · ${esc(q.trang_thai_duyet)}${o ? " · đang dùng ở " + esc(o.phan) + " câu " + o.so : ""}</span></div>
           <div class="nh-nd">${esc(q.noi_dung)}</div>${q.ghi_chu ? `<div class="nho">${esc(q.ghi_chu)}</div>` : ""}
           <details><summary>Xem đáp án theo ${viet(c.diem)} điểm</summary><div class="nh-da">${esc(taoDapAn(q, c.diem)).replace(/\n/g, "<br>")}</div></details>
           <button class="nut-xanh" data-dung="${esc(q.ma)}">Dùng câu này</button></div>`;
