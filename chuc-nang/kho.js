@@ -186,7 +186,6 @@
         <p class="phu">${esc(t.dang || "")} · ${t.so_chu} chữ${D.laTho(t) ? " · " + t.so_dong + " dòng" : ""}</p>
         ${t.loi_dan ? `<p class="loi-dan">${esc(t.loi_dan)}</p>` : ""}
         <div class="van-ban ${D.laTho(t) ? "tho" : ""}">${esc(t.van_ban)}</div>`)}
-      ${t.ghi_chu_noi_bo && !window.BAN_DEMO ? muc("Ghi chú khi dựng thẻ (chỉ người soạn thấy)", `<p class="ghi-chu-noi-bo">${esc(t.ghi_chu_noi_bo)}</p>`) : ""}
       ${muc("Nguồn", `<p>${esc(dn) || "<em>Chưa có nguồn</em>"}</p>${thieuNguon ? `<p class="canh-bao">Nguồn chưa đủ: cần tác giả và nơi in (sách, báo) hoặc đường dẫn.</p>` : ""}`)}
       ${muc("Bằng chứng", (t.bang_chung && (t.bang_chung.duong_dan || (t.bang_chung.anh || []).length))
         ? `${t.bang_chung.duong_dan ? `<p><a href="${esc(t.bang_chung.duong_dan)}" target="_blank" rel="noopener">${esc(t.bang_chung.duong_dan)}</a></p>` : ""}${(t.bang_chung.anh || []).map(a => `<p>Ảnh: ${esc(a)}</p>`).join("")}`
