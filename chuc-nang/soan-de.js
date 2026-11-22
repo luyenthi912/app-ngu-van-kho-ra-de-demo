@@ -116,7 +116,7 @@
         <label>Tên đề<input id="sd-ten" value="${esc(de.ten)}" placeholder="Ví dụ: Đề kiểm tra giữa kì I, đề 1"></label>
 
         <h4>Thông tin đầu trang đề</h4>
-        <label>Sở / Phòng GD&amp;ĐT<input id="sd-h-so" value="${esc(dau.so)}" placeholder="SỞ GD&amp;ĐT ..."></label>
+        <label>Sở / Phòng GD&amp;ĐT<input id="sd-h-so" value="${esc(dau.so)}" placeholder="SỞ GD&amp;ĐT HÀ NỘI"></label>
         <label>Tên trường<input id="sd-h-truong" value="${esc(dau.truong)}" placeholder="TRƯỜNG THPT ..."></label>
         <label>Tên kì kiểm tra<input id="sd-h-ky" value="${esc(dau.ky)}" placeholder="KIỂM TRA GIỮA KÌ I - NĂM HỌC 2026 - 2027"></label>
         <label>Thời gian làm bài<input id="sd-h-tg" value="${esc(dau.tg)}" placeholder="90 phút, không kể thời gian phát đề"></label>
@@ -380,6 +380,8 @@
   // Tờ đề để in và xuất Word được dựng lại từ dữ liệu đề, không lấy từ giao diện soạn (có ô nhập, nút, chip yêu cầu).
   // Dòng thương hiệu chỉ có ở bản xem trên màn hình, không nằm trong chuỗi này nên bản in và file Word luôn sạch.
   const SO_LA = ["I", "II", "III", "IV", "V"];
+  // Bản demo: tờ đề in và file Word giữ một dòng chú thích nhỏ ở cuối. Bản đầy đủ không có dòng này.
+  const DONG_DEMO = "Bản dùng thử · Kho Ngữ liệu Ngữ văn – Kết Nối Tri Thức (Zalo: 0328.961.617)";
   const diemChu = x => { const d = so(x); return (Number.isInteger(d) ? d.toFixed(1) : String(d)).replace(".", ","); };
   // Thơ giữ nguyên dòng, mỗi khổ một đoạn; văn xuôi mỗi dòng là một đoạn, lùi đầu dòng 1,27 cm.
   const laTho = t => /thơ|ca dao|lục bát|hai-cư/i.test((t && t.the_loai) || "");
@@ -420,6 +422,7 @@
       });
     });
     h += `<p class="vb-het">HẾT</p>`;
+    if (window.BAN_DEMO) h += `<p class="vb-demo">${DONG_DEMO}</p>`;
     if (kemBang) {
       const ctx = ctxSinh(), SV = window.SinhVanBan, nt = '<br clear="all" style="page-break-before:always">';
       h += nt + SV.html(SV.maTran(ctx), "word", ctx, { co_chu: "13pt" }) + nt + SV.html(SV.dacTa(ctx), "word", ctx, { co_chu: "13pt" });
@@ -467,6 +470,7 @@
     .vb-nguon { text-align: right; font-style: italic; }
     .vb-chuthich { font-size: 12pt; }
     .vb-het { text-align: center; font-weight: bold; margin-top: 12pt; }
+    .vb-demo { font-size: 8.5pt; font-style: italic; color: #9A9A9A; text-align: right; margin-top: 18pt; }
     .vb-doan, .vb-cau { text-indent: 1.27cm; }
     .vb-kho { margin-left: 1.27cm; text-align: left; }
     table { border-collapse: collapse; }`;

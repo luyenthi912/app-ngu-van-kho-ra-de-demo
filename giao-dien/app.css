@@ -355,6 +355,7 @@ button { font: inherit; cursor: pointer; }
   #sd-vung-in .vb-het { text-align: center; font-weight: bold; margin-top: 12pt; }
   #sd-vung-in .vb-doan, #sd-vung-in .vb-cau { text-indent: 1.27cm; }
   #sd-vung-in .vb-kho { margin-left: 1.27cm; text-align: left; }
+  #sd-vung-in .vb-demo { font-size: 8.5pt; font-style: italic; color: #9A9A9A; text-align: right; margin-top: 18pt; text-indent: 0; }
   #sd-vung-in table { border-collapse: collapse; page-break-inside: auto; }
   #sd-vung-in tr { page-break-inside: avoid; }
 }
