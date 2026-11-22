@@ -152,6 +152,6 @@
     };
   }
 
-  window.KhoRaDe = { ve };
+  window.KhoRaDe = { ve, tatCa, kiemTra };
   ve();
 })();

@@ -62,7 +62,29 @@
   <section id="khung-form"></section>
 </main>
 
-<main class="khung" id="man-ra-de" hidden>
+<main class="khung khung-rong" id="man-ra-de" hidden>
+  <nav class="tab-con" id="tab-ra-de" aria-label="Các việc trong Ra đề">
+    <button data-tab="soan" class="dang-chon">Soạn đề</button>
+    <button data-tab="khung">Khung đề</button>
+    <button data-tab="yccd">Yêu cầu cần đạt</button>
+  </nav>
+
+  <div id="tab-soan">
+    <nav class="tab-cot" id="tab-cot" aria-label="Chọn cột hiển thị">
+      <button data-cot="trai">Thiết lập</button>
+      <button data-cot="de" class="dang-chon">Đề</button>
+      <button data-cot="phai">Văn bản</button>
+      <button data-cot="kiem-tra">Kiểm tra</button>
+    </nav>
+    <div class="soan-de" id="sd-goc" data-hien="de">
+      <section class="hop cot-trai" id="sd-trai"></section>
+      <section class="cot-giua" id="sd-giua"></section>
+      <section class="hop cot-phai" id="sd-phai"></section>
+    </div>
+    <div class="thanh-trang-thai" id="sd-tt"></div>
+  </div>
+
+  <div id="tab-khung" hidden>
   <section class="hop">
     <h2>Ra đề: khung đề</h2>
     <p class="phu">Chọn một khung để xem bảng vị trí câu. Khung mẫu chỉ xem; bấm "Nhân bản thành khung riêng" để sửa theo khung của trường. Màn hình soạn đề ba cột sẽ có ở các việc sau.</p>
@@ -71,12 +93,16 @@
     <aside class="hop"><h3>Danh sách khung</h3><ul id="ds-khung" class="ds-khung"></ul></aside>
     <section class="hop" id="chi-tiet-khung"></section>
   </div>
+  </div>
+
+  <div id="tab-yccd" hidden>
   <section class="hop" id="khu-yccd">
     <h2>Yêu cầu cần đạt theo bài</h2>
     <p class="phu">Chép nguyên văn từ khung "Yêu cầu cần đạt" ở đầu mỗi bài trong sách giáo khoa. Mỗi ý có mã riêng để gắn với câu hỏi.</p>
     <div class="hang-loc"><select id="yccd-lop" aria-label="Lớp"></select><select id="yccd-bai" aria-label="Bài"></select></div>
     <div id="yccd-chi-tiet"></div>
   </section>
+  </div>
 </main>
 
 <div id="man-the" hidden>
