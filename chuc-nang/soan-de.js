@@ -42,8 +42,11 @@
   (window.NGAN_HANG || []).forEach(lo => lo.cau.forEach(q => NH.push(q)));
   const mucCua = c => Object.keys(c.muc || {}).filter(m => Number(c.muc[m]) > 0);
   // Câu hỏi trong ngân hàng hợp với vị trí câu: cùng thẻ ngữ liệu, cùng phần; đúng mức đứng trước.
+  // Ô đoạn văn của phần Viết (dang "doan-van", khung THCS 5-5 và 4-6) lấy các câu viết đoạn văn của thẻ.
+  const laDoanVan = q => /^Đảm bảo hình thức đoạn văn/.test((q.y && q.y[0] && q.y[0].nd) || "");
   function nganHangCho(c) {
     if (!de.the || de.the.kieu !== "kho") return [];
+    if (c.dang === "doan-van") return NH.filter(q => q.the === de.the.ma && laDoanVan(q));
     const ms = mucCua(c), muc = ms.length > 1 ? "Nhiều mức" : ms[0];
     return NH.filter(q => q.the === de.the.ma && q.phan === c.phan).sort((a, b) => (b.muc === muc) - (a.muc === muc));
   }
@@ -65,6 +68,11 @@
     return dong.join("\n");
   }
   function dungCau(c, q) {
+    // Đoạn văn trong ngân hàng viết cho phần Đọc hiểu (5 đến 7 dòng); đặt vào ô đoạn văn phần Viết thì đổi dung lượng.
+    if (c.dang === "doan-van") {
+      const doi = s => s.replace(/khoảng 5 đến 7 dòng/g, "khoảng 200 chữ");
+      q = Object.assign({}, q, { noi_dung: doi(q.noi_dung), y: q.y.map(y => Object.assign({}, y, { nd: doi(y.nd) })) });
+    }
     c.noi_dung = q.noi_dung;
     c.dap_an = taoDapAn(q, c.diem); c.da_sinh = c.dap_an; c.nguon_nh = q.ma;
     c.yccd = [...new Set((c.yccd || []).concat((q.yccd || []).filter(m => MA_YCCD[m])))];
@@ -74,7 +82,7 @@
   function napKhung() { khungs = window.KhoRaDe.tatCa().filter(k => k.cau && k.cau.length); }
 
   function saoCau(c, i) {
-    return { id: "c" + i, phan: c.phan, so: c.so, diem: c.diem, muc: Object.assign({}, c.muc), goi_y: c.goi_y || "", yccd: [], don_vi: "", noi_dung: "", dap_an: "", duyet: false };
+    return { id: "c" + i, phan: c.phan, so: c.so, diem: c.diem, muc: Object.assign({}, c.muc), goi_y: c.goi_y || "", dang: c.dang || "", yccd: [], don_vi: "", noi_dung: "", dap_an: "", duyet: false };
   }
   function deMoi(k) {
     k = k || khungs[0];
@@ -143,9 +151,7 @@
     $("#sd-trai").innerHTML = `
       <div class="trai-dau"><h3>Thiết lập</h3><button class="nut-bo" id="sd-thu" title="Thu gọn hoặc mở cột">${$("#sd-goc").classList.contains("thu-gon") ? "›" : "‹"}</button></div>
       <div class="trai-ruot">
-        <label>Khung đề<select id="sd-khung">${khungs.map(x => `<option value="${esc(x.ma)}" ${x.ma === k.ma ? "selected" : ""}>${esc(x.ten)}${x.can_xac_nhan ? " (chờ xác nhận)" : ""}</option>`).join("")}</select></label>
-        <div class="nho">Khung THCS 90 phút và 45 phút chờ cô gửi cấu trúc nên chưa có trong danh sách.</div>
-        <div class="hang-2">
+        <label>Khung đề<select id="sd-khung">${khungs.map(x => `<option value="${esc(x.ma)}" ${x.ma === k.ma ? "selected" : ""}>${esc(x.ten)}${x.can_xac_nhan ? " (chờ xác nhận)" : ""}</option>`).join("")}</select></label>        <div class="hang-2">
           <label>Lớp<select id="sd-lop">${lops.map(l => `<option ${l === de.lop ? "selected" : ""}>${l}</option>`).join("")}</select></label>
           <label>Bài<select id="sd-bai">${dsBai.map(b => `<option value="${esc(b.bai)}" ${b.bai === de.bai ? "selected" : ""}>${esc(b.bai)}</option>`).join("")}</select></label>
         </div>
@@ -447,7 +453,7 @@
     let n = 0;
     de.cau.filter(c => !c.noi_dung.trim()).forEach(c => {
       const ms = mucCua(c), muc = ms.length > 1 ? "Nhiều mức" : ms[0];
-      const q = nganHangCho(c).find(x => x.muc === muc && !dungO(x));
+      const q = nganHangCho(c).find(x => (c.dang === "doan-van" || x.muc === muc) && !dungO(x));
       if (q) { dungCau(c, q); n++; }
     });
     tuLuu(); veGiua(); vePhai(); veTrangThai(); datSang(false);
