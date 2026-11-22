@@ -299,3 +299,62 @@ button { font: inherit; cursor: pointer; }
 .con-dau a { color: inherit; text-decoration: none; }
 .con-dau a:hover { text-decoration: underline; }
 .chu-thich-demo { margin: 10px 0 0; font-size: 11px; color: #A3A6A3; }
+
+/* ---------- Ma trận và bản đặc tả tự sinh ---------- */
+.bang-van-ban th, .bang-van-ban td { font-size: 13px; }
+.bang-van-ban td.so { text-align: center; white-space: nowrap; }
+.bang-van-ban td:first-child { white-space: nowrap; }
+.bang-van-ban .goi-y { color: var(--chu-phu); font-size: 11.5px; font-style: italic; }
+.bang-van-ban .ma-y { color: var(--chu-phu); font-size: 11px; background: var(--nen); border-radius: 8px; padding: 0 6px; white-space: nowrap; }
+.bang-van-ban .chua-gan { color: var(--do); font-style: italic; }
+.bang-van-ban .the-muc { font-size: 11.5px; }
+.ghi-chu-bang { font-size: 12.5px; color: var(--chu-phu); margin: 6px 0 0; }
+.cot-phai .hang-nut { margin-top: 0; }
+.cot-phai .cuon-ngang { overflow-x: auto; }
+.cot-phai td.so, .cot-phai th { text-align: center; }
+
+.phu-lop { position: fixed; inset: 0; z-index: 30; background: rgba(20,24,22,.55); display: flex; align-items: flex-start; justify-content: center; padding: 24px 12px; overflow: auto; }
+.phu-lop[hidden] { display: none; }
+.phu-lop-ruot { position: relative; background: #fff; border-radius: 10px; padding: 36px 20px 20px; max-width: 1400px; width: 100%; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+.phu-lop-ruot .nut-dong { position: absolute; top: 8px; right: 10px; }
+.phu-lop .bang-van-ban { border-collapse: collapse; width: 100%; }
+.phu-lop .bang-van-ban th, .phu-lop .bang-van-ban td { font-size: 14.5px; padding: 6px 9px; border: 1px solid var(--vien); text-align: left; vertical-align: top; }
+.phu-lop .bang-van-ban th { background: var(--xanh-nhat); color: var(--xanh); text-align: center; }
+.phu-lop .bang-van-ban td.so { text-align: center; }
+.phu-lop .bang-van-ban tfoot td { background: var(--nen); font-weight: 600; }
+.cau .o-dv { width: 100%; margin-top: 6px; font: inherit; font-size: 14px; padding: 4px 8px; border: 1px solid var(--vien); border-radius: 6px; color: var(--chu-phu); background: #fff; }
+.cau .o-dv:focus { color: var(--chu); }
+
+.cot-phai .bang-van-ban { min-width: 500px; }
+.bang-van-ban td.mo-ta { min-width: 210px; }
+.bang-van-ban td:nth-child(3) { min-width: 110px; }
+.bang-van-ban th { white-space: nowrap; }
+
+/* ---------- Đầu trang đề, in và xuất ---------- */
+.hang-hanh-dong { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin: 0 0 10px; font-size: 14px; }
+.hang-hanh-dong .o-chon { display: inline-flex; gap: 5px; align-items: center; color: var(--chu-phu); }
+.bang-dau-de { width: 100%; border-collapse: collapse; margin: 0 0 10px; font-size: 16px; line-height: 1.45; }
+.bang-dau-de td { border: none; vertical-align: top; text-align: center; padding: 0 4px; }
+.bang-dau-de td.trai { width: 42%; }
+.giay-de h3.chua-ten { color: var(--chu-phu); font-weight: 400; font-style: italic; text-transform: none; font-size: 17px; }
+.giay-de .thuong-hieu { margin-top: 26px; text-align: center; font-family: "Segoe UI", Arial, sans-serif; font-size: 11px; color: var(--chu-phu); opacity: .45; }
+.vung-in { display: none; }
+
+@media print {
+  @page { size: A4; margin: 2cm; }
+  body.dang-in-de { background: #fff; margin: 0; }
+  body.dang-in-de > *:not(#sd-vung-in) { display: none !important; }
+  body.dang-in-de #sd-vung-in { display: block; font: 13pt/1.35 "Times New Roman", serif; color: #000; }
+  #sd-vung-in p { margin: 0 0 5pt; text-align: justify; }
+  #sd-vung-in .bang-dau-de { font-size: 13pt; line-height: 1.35; margin-bottom: 8pt; }
+  #sd-vung-in .de-dau { text-align: center; font-size: 13pt; color: #000; }
+  #sd-vung-in .vb-tieude { text-align: center; font-weight: bold; font-size: 14pt; margin: 10pt 0; }
+  #sd-vung-in .vb-phan { font-weight: bold; margin: 12pt 0 5pt; text-align: left; }
+  #sd-vung-in .vb-nguon { text-align: right; font-style: italic; }
+  #sd-vung-in .vb-chuthich { font-size: 12pt; }
+  #sd-vung-in .vb-het { text-align: center; font-weight: bold; margin-top: 12pt; }
+  #sd-vung-in .vb-doan, #sd-vung-in .vb-cau { text-indent: 1.27cm; }
+  #sd-vung-in .vb-kho { margin-left: 1.27cm; text-align: left; }
+  #sd-vung-in table { border-collapse: collapse; page-break-inside: auto; }
+  #sd-vung-in tr { page-break-inside: avoid; }
+}
