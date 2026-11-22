@@ -1608,7 +1608,7 @@ window.KHO_LO.push({
   {
    "trang_thai_duyet": "Chờ duyệt",
    "ngay_tao": "2026-11-21",
-   "ngay_sua": "2026-11-21",
+   "ngay_sua": "2026-11-22",
    "ma": "KNL-0202",
    "nhan_de": "Gọi nắng",
    "loi_dan": "",
@@ -1635,7 +1635,7 @@ window.KHO_LO.push({
     "Quê hương, làng quê",
     "Trẻ em, tuổi thơ"
    ],
-   "chu_de": "Tình yêu thương hồn nhiên của đứa trẻ dành cho mẹ, bà, cha, em gắn với cảnh mùa gặt nắng vàng ở làng quê.",
+   "chu_de": "Tình yêu thương hồn nhiên của đứa trẻ dành cho mẹ, bà, cha, em gắn với khung cảnh nắng vàng và nhịp lao động bình dị ở làng quê.",
    "giai_doan": "Văn học Việt Nam sau 1975",
    "phu_hop": [
     {
