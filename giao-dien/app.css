@@ -372,3 +372,14 @@ button { font: inherit; cursor: pointer; }
 .cau-loi:empty { display: none; }
 .cau-loi .loi { color: var(--do); }
 .cau-loi .nhac { color: #8A5A12; }
+
+/* ---------- Ngân hàng câu hỏi mẫu ---------- */
+.nut-nh { border-color: var(--vang); color: var(--vang); }
+.hop-nh { border: 1px dashed var(--vang); border-radius: 6px; padding: 6px 10px; margin-top: 6px; max-height: 420px; overflow: auto; background: var(--vang-nhat); }
+.nh-cau { background: #fff; border: 1px solid var(--vien); border-radius: 6px; padding: 8px 10px; margin: 6px 0; font-size: 14px; }
+.nh-cau.da-dung { opacity: .65; }
+.nh-dau { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 4px; }
+.nh-nd { font-family: "Times New Roman", serif; font-size: 16px; line-height: 1.45; margin-bottom: 4px; }
+.nh-cau details { margin: 4px 0 6px; }
+.nh-cau summary { cursor: pointer; color: var(--xanh); font-size: 13px; }
+.nh-da { font-size: 13.5px; line-height: 1.45; padding: 4px 0 0 8px; border-left: 3px solid var(--vien); margin-top: 4px; }

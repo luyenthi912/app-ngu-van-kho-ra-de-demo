@@ -35,7 +35,41 @@
   const yCuaBai = (lop, bai) => (baiCuaLop(lop).find(b => b.bai === bai) || { y: [] }).y;
 
   let dau = Object.assign({ so: "", truong: "", ky: "", tg: "" }, doc(K_DAU, {})), kemBang = false;
-  let khungs = [], de = null, cauSang = null, tabPhai = "ma-tran", moGan = null, kho = [];
+  let khungs = [], de = null, cauSang = null, tabPhai = "ma-tran", moGan = null, moNH = null, kho = [];
+
+  // ---------- Ngân hàng câu hỏi mẫu (việc 7, dữ liệu ở kho/cau-hoi) ----------
+  const NH = [];
+  (window.NGAN_HANG || []).forEach(lo => lo.cau.forEach(q => NH.push(q)));
+  const mucCua = c => Object.keys(c.muc || {}).filter(m => Number(c.muc[m]) > 0);
+  // Câu hỏi trong ngân hàng hợp với vị trí câu: cùng thẻ ngữ liệu, cùng phần; đúng mức đứng trước.
+  function nganHangCho(c) {
+    if (!de.the || de.the.kieu !== "kho") return [];
+    const ms = mucCua(c), muc = ms.length > 1 ? "Nhiều mức" : ms[0];
+    return NH.filter(q => q.the === de.the.ma && q.phan === c.phan).sort((a, b) => (b.muc === muc) - (a.muc === muc));
+  }
+  const dungO = q => de.cau.find(x => x.nguon_nh === q.ma);
+  // Đổi trọng số các ý ra điểm theo điểm câu; ưu tiên bước 0,25, chỉ dùng 0,125 khi không chia đều được.
+  const so3 = x => Math.round(x * 1000) / 1000;
+  const diem3 = x => { const d = so3(x); return (Number.isInteger(d) ? d.toFixed(1) : String(d)).replace(".", ","); };
+  function chiaDiem(y, diem) {
+    const tho = y.map(x => x.ty_le * diem);
+    const buoc = tho.every(v => Math.abs(v / 0.25 - Math.round(v / 0.25)) < 1e-9) ? 0.25 : 0.125;
+    const r = tho.map(v => Math.round(v / buoc) * buoc);
+    r[r.length - 1] += diem - r.reduce((a, b) => a + b, 0);
+    return r.map(so3);
+  }
+  function taoDapAn(q, diem) {
+    const d = chiaDiem(q.y, diem);
+    const dong = q.y.map((y, i) => (q.phan === "Viết" ? "" : "- ") + `${y.nd} (${diem3(d[i])} điểm)`);
+    if (q.luu_y) dong.push("Lưu ý: " + q.luu_y);
+    return dong.join("\n");
+  }
+  function dungCau(c, q) {
+    c.noi_dung = q.noi_dung;
+    c.dap_an = taoDapAn(q, c.diem); c.da_sinh = c.dap_an; c.nguon_nh = q.ma;
+    c.yccd = [...new Set((c.yccd || []).concat((q.yccd || []).filter(m => MA_YCCD[m])))];
+    c.duyet = false;
+  }
   const khungCua = ma => khungs.find(k => k.ma === ma);
   function napKhung() { khungs = window.KhoRaDe.tatCa().filter(k => k.cau && k.cau.length); }
 
@@ -161,6 +195,7 @@
     const muc = don ? Object.keys(c.muc)[0] : null;
     const k = khungCua(de.khung_ma);
     const ys = yCuaBai(de.lop, de.bai).filter(y => (NHOM_THEO_PHAN[c.phan] || ["Đọc", "Tiếng Việt", "Viết"]).includes(y.nhom));
+    const nh = nganHangCho(c);
     return `<div class="cau ${c.id === cauSang ? "sang" : ""} ${c.duyet ? "da-duyet" : ""}" data-cau="${c.id}">
       <div class="cau-dau"><b>Câu ${c.so}</b>
         <span>(<input type="number" class="o-diem" min="0" max="10" step="0.25" value="${c.diem}" aria-label="Điểm câu ${c.so}"> điểm)</span>
@@ -169,7 +204,16 @@
         <label class="nut-duyet"><input type="checkbox" class="o-duyet" ${c.duyet ? "checked" : ""}> Đã duyệt</label>
       </div>
       <div class="cau-yccd">${c.yccd.map(chipY).join("") || `<span class="chua nho" style="color:var(--chu-phu)">Chưa gắn yêu cầu cần đạt</span>`}
-        <button class="nut-bo" data-gan="${c.id}">${moGan === c.id ? "Đóng" : "+ Gắn yêu cầu cần đạt"}</button></div>
+        <button class="nut-bo" data-gan="${c.id}">${moGan === c.id ? "Đóng" : "+ Gắn yêu cầu cần đạt"}</button>
+        ${nh.length ? `<button class="nut-bo nut-nh" data-nh="${c.id}">${moNH === c.id ? "Đóng ngân hàng" : "Ngân hàng (" + nh.length + ")"}</button>` : ""}</div>
+      ${moNH === c.id ? `<div class="hop-nh">${nh.map(q => {
+        const o = dungO(q);
+        return `<div class="nh-cau ${o && o.id !== c.id ? "da-dung" : ""}"><div class="nh-dau"><span class="the-muc muc-${LOP_MUC[q.muc] || "vdc"}">${esc(q.muc)}</span>
+          <span class="nho">${esc(q.ma)} · ${esc(q.trang_thai_duyet)}${o ? " · đang dùng ở " + esc(o.phan) + " câu " + o.so : ""}</span></div>
+          <div class="nh-nd">${esc(q.noi_dung)}</div>${q.ghi_chu ? `<div class="nho">${esc(q.ghi_chu)}</div>` : ""}
+          <details><summary>Xem đáp án theo ${viet(c.diem)} điểm</summary><div class="nh-da">${esc(taoDapAn(q, c.diem)).replace(/\n/g, "<br>")}</div></details>
+          <button class="nut-xanh" data-dung="${esc(q.ma)}">Dùng câu này</button></div>`;
+      }).join("")}</div>` : ""}
       <input class="o-dv" value="${esc(c.don_vi || "")}" placeholder="${esc("Nội dung kiến thức (gợi ý: " + window.SinhVanBan.donViGoiY(c, ctxSinh()) + ")")}" aria-label="Nội dung kiến thức">
       ${moGan === c.id ? `<div class="hop-gan">${ys.length ? ys.map(y => `<label class="dong-y"><input type="checkbox" data-y="${esc(y.ma)}" ${c.yccd.includes(y.ma) ? "checked" : ""}><span><b>${esc(y.ma)}</b> ${esc(y.nd)}</span></label>`).join("")
         : `<div class="nho">Bài này chưa có yêu cầu cần đạt phù hợp với phần ${esc(c.phan)}.</div>`}</div>` : ""}
@@ -193,6 +237,7 @@
         <button class="nut-xanh" id="sd-nut-in">In / Lưu PDF</button>
         <button class="nut-bo" id="sd-nut-word">Tải file Word (.doc)</button>
         <label class="o-chon"><input type="checkbox" id="sd-kem" ${kemBang ? "checked" : ""}> Kèm ma trận, bản đặc tả, đáp án</label>
+        ${de.the && NH.some(q => q.the === de.the.ma) ? `<button class="nut-bo" id="sd-dien-nhanh" title="Điền các câu còn trống bằng câu hỏi mẫu cùng mức">Điền nhanh từ ngân hàng</button>` : ""}
       </div>
       <article class="giay-de">
       <div id="sd-dau-de">${dauDeHtml()}</div>
@@ -328,6 +373,17 @@
     const t = e.target.closest("button"); if (!t) return;
     if (t.id === "sd-nut-in") { inDe(); return; }
     if (t.id === "sd-nut-word") { taiWord(); return; }
+    if (t.id === "sd-dien-nhanh") { dienNhanh(); return; }
+    if (t.dataset.nh) { moNH = moNH === t.dataset.nh ? null : t.dataset.nh; moGan = null; veGiua(); datSang(false); return; }
+    if (t.dataset.dung) {
+      const c = cauTheoId(t.closest("[data-cau]").dataset.cau), q = NH.find(x => x.ma === t.dataset.dung), o = q && dungO(q);
+      if (!q) return;
+      if (c.noi_dung.trim() && !confirm("Câu này đã có nội dung. Thay bằng câu hỏi mẫu?")) return;
+      if (o && o.id !== c.id && !confirm(`Câu hỏi mẫu này đang dùng ở ${o.phan} câu ${o.so}. Vẫn dùng thêm ở đây?`)) return;
+      dungCau(c, q); moNH = null; tuLuu(); veGiua(); vePhai(); veTrangThai(); datSang(false);
+      thongBao("Đã đưa câu hỏi mẫu vào. Cô đọc lại rồi bấm Đã duyệt.");
+      return;
+    }
     if (t.dataset.gan) { moGan = moGan === t.dataset.gan ? null : t.dataset.gan; veGiua(); datSang(false); }
     else if (t.dataset.duyetPhan) {
       const cs = de.cau.filter(x => x.phan === t.dataset.duyetPhan), het = cs.every(x => x.duyet);
@@ -341,6 +397,9 @@
     else if (el.classList.contains("o-dv")) { c.don_vi = el.value; veChay(); }
     else if (el.classList.contains("o-diem")) {
       const d = parseFloat(el.value); c.diem = isNaN(d) ? 0 : d;
+      // Đáp án lấy từ ngân hàng mà chưa sửa tay thì chia lại điểm theo điểm câu mới
+      const q = c.nguon_nh && c.dap_an === c.da_sinh && NH.find(x => x.ma === c.nguon_nh);
+      if (q) { c.dap_an = taoDapAn(q, c.diem); c.da_sinh = c.dap_an; }
       if (Object.keys(c.muc).length === 1) c.muc = { [Object.keys(c.muc)[0]]: c.diem };
       veChay();
     }
@@ -383,6 +442,17 @@
     if (e.target.closest("#sd-tt-word")) { taiWord(); return; }
     if (e.target.closest("#sd-viec")) { tabPhai = "kiem-tra"; vePhai(); setCot("phai"); }
   });
+
+  function dienNhanh() {
+    let n = 0;
+    de.cau.filter(c => !c.noi_dung.trim()).forEach(c => {
+      const ms = mucCua(c), muc = ms.length > 1 ? "Nhiều mức" : ms[0];
+      const q = nganHangCho(c).find(x => x.muc === muc && !dungO(x));
+      if (q) { dungCau(c, q); n++; }
+    });
+    tuLuu(); veGiua(); vePhai(); veTrangThai(); datSang(false);
+    thongBao(n ? `Đã điền ${n} câu từ ngân hàng. Cô đọc lại và duyệt từng câu.` : "Không còn câu trống nào có câu hỏi mẫu cùng mức.");
+  }
 
   // ---------- Đầu trang đề, in và tải file Word ----------
   // Tờ đề để in và xuất Word được dựng lại từ dữ liệu đề, không lấy từ giao diện soạn (có ô nhập, nút, chip yêu cầu).
