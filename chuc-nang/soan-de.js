@@ -64,26 +64,29 @@
   }
   const soChuThe = () => (de.the ? D.demChu(de.the.van_ban) : 0);
 
-  // ---------- Kiểm tra ----------
+  // ---------- Kiểm tra độ khớp (việc 6, xem ra-de/kiem-tra-khop.js) ----------
+  function trungSgk() {
+    if (!de.the || de.the.kieu !== "kho") return null;
+    const t = kho.find(x => x.ma === de.the.ma);
+    return t ? D.doiChieuSgk(t).map(D.moTaSgk) : null;
+  }
   function kiemTraDe() {
-    const k = khungCua(de.khung_ma);
-    const kEff = { cau: de.cau, phan: k.phan, muc_do: k.muc_do, ti_le: k.ti_le };
-    const r = window.KhoRaDe.kiemTra(kEff);
-    const loi = r.loi.map(t => ({ nhom: "Số liệu", t }));
-    const canLam = [];
-    const docHieu = de.cau.filter(c => c.phan === "Đọc hiểu");
-    if (!de.the) loi.push({ nhom: "Nội dung", t: "Chưa chọn ngữ liệu cho phần Đọc hiểu." });
-    else if (!de.the.nguon_du) loi.push({ nhom: "Nội dung", t: "Ngữ liệu chưa đủ nguồn (cần tác giả, tên tác phẩm, và báo, sách, nhà xuất bản hoặc đường dẫn)." });
-    docHieu.filter(c => !c.yccd.length).forEach(c => loi.push({ nhom: "Nội dung", t: `Đọc hiểu câu ${c.so}: chưa gắn yêu cầu cần đạt.`, cau: c.id }));
-    const n = soChuThe(), mc = k.moc_chu;
-    if (de.the && mc && (n < mc.tu || n > mc.den)) canLam.push({ t: `Ngữ liệu ${n} chữ, ngoài mốc ${mc.tu} đến ${mc.den} chữ của khung.` });
-    const chuaND = de.cau.filter(c => !c.noi_dung.trim());
-    if (chuaND.length) canLam.push({ t: "Chưa có nội dung câu: " + chuaND.map(c => `${c.phan} ${c.so}`).join(", ") + "." });
-    const chuaDuyet = de.cau.filter(c => !c.duyet);
-    if (chuaDuyet.length) canLam.push({ t: `Còn ${chuaDuyet.length} câu chưa duyệt.` });
+    const k = khungCua(de.khung_ma), ctx = ctxSinh(), SV = window.SinhVanBan;
+    const mt = SV.maTran(ctx), dt = SV.dacTa(ctx);
     const trang = uocTrang();
-    if (trang > 2) canLam.push({ t: `Ước tính ${viet(trang)} trang, vượt mức 2 trang (tạm tính ${CHU_MOT_TRANG} chữ một trang, chưa dàn trang thật).` });
-    return { loi, canLam, tong: r.tong, theoMuc: r.theoMuc, trang };
+    const kq = window.KiemTraKhop.kiemTraKhop({
+      de, khung: k, yccd: MA_YCCD, dau, mt, dt, trang, chuMotTrang: CHU_MOT_TRANG, demChu: D.demChu,
+      htmlWord: SV.html(mt, "word", ctx) + SV.html(dt, "word", ctx) + bangDapAn(), trungSgk: trungSgk()
+    });
+    return { kq, tong: kq.tong, trang, viec: kq.loi + kq.nhac };
+  }
+  // Ghi chú lỗi ngay trong thẻ câu ở cột giữa
+  function veLoiCau(kq) {
+    kq = kq || kiemTraDe().kq;
+    document.querySelectorAll("#sd-giua [data-loi-cau]").forEach(o => {
+      const ds = kq.theo_cau[o.dataset.loiCau] || [];
+      o.innerHTML = ds.map(x => `<div class="${x.kieu}">${x.kieu === "loi" ? "✗" : "!"} ${esc(x.t)}</div>`).join("");
+    });
   }
   function uocTrang() {
     const chu = soChuThe() + de.cau.reduce((a, c) => a + D.demChu(c.noi_dung), 0) + 120;
@@ -170,6 +173,7 @@
       <input class="o-dv" value="${esc(c.don_vi || "")}" placeholder="${esc("Nội dung kiến thức (gợi ý: " + window.SinhVanBan.donViGoiY(c, ctxSinh()) + ")")}" aria-label="Nội dung kiến thức">
       ${moGan === c.id ? `<div class="hop-gan">${ys.length ? ys.map(y => `<label class="dong-y"><input type="checkbox" data-y="${esc(y.ma)}" ${c.yccd.includes(y.ma) ? "checked" : ""}><span><b>${esc(y.ma)}</b> ${esc(y.nd)}</span></label>`).join("")
         : `<div class="nho">Bài này chưa có yêu cầu cần đạt phù hợp với phần ${esc(c.phan)}.</div>`}</div>` : ""}
+      <div class="cau-loi" data-loi-cau="${c.id}"></div>
       <textarea class="o-nd" rows="${c.phan === "Viết" ? 4 : 3}" placeholder="${esc(c.goi_y ? "Gợi ý: " + c.goi_y : "Nội dung câu hỏi")}">${esc(c.noi_dung)}</textarea>
     </div>`;
   }
@@ -183,7 +187,7 @@
         ${t.loi_dan ? `<div class="loi-dan">${esc(t.loi_dan)}</div>` : ""}
         <div class="vb">${esc(t.van_ban)}</div>
         <div class="nguon">${esc(t.nguon ? "(Nguồn: " + t.nguon + ")" : "")}</div>
-        ${t.chu_thich && t.chu_thich.length ? `<div class="chu-thich"><b>Chú thích</b> (khi xuất Word sẽ nằm ở chân trang)<br>${t.chu_thich.map((x, i) => `${i + 1}. ${esc(x.tu)}: ${esc(x.nghia)}`).join("<br>")}</div>` : ""}</div>`;
+        ${t.chu_thich && t.chu_thich.length ? `<div class="chu-thich"><b>Chú thích</b><br>${t.chu_thich.map((x, i) => `${i + 1}. ${esc(x.tu)}: ${esc(x.nghia)}`).join("<br>")}</div>` : ""}</div>`;
     };
     $("#sd-giua").innerHTML = `<div class="hang-hanh-dong">
         <button class="nut-xanh" id="sd-nut-in">In / Lưu PDF</button>
@@ -201,12 +205,13 @@
       }).join("")}
       <div class="thuong-hieu">Soạn thảo từ Kho Ngữ liệu Ngữ văn · Kết Nối Tri Thức</div>
     </article>`;
+    veLoiCau();
   }
 
   // ---------- Cột phải ----------
   function vePhai() {
     const k = khungCua(de.khung_ma), kt = kiemTraDe();
-    const nhan = [["ma-tran", "Ma trận"], ["dac-ta", "Bản đặc tả"], ["dap-an", "Đáp án"], ["kiem-tra", `Kiểm tra${kt.loi.length ? " (" + kt.loi.length + ")" : ""}`]];
+    const nhan = [["ma-tran", "Ma trận"], ["dac-ta", "Bản đặc tả"], ["dap-an", "Đáp án"], ["kiem-tra", `Kiểm tra${kt.kq.loi ? " (" + kt.kq.loi + ")" : ""}`]];
     const hang = (c, noi) => `<tr data-cau="${c.id}" class="${c.id === cauSang ? "sang" : ""}">${noi}</tr>`;
     let nd = "";
     if (tabPhai === "ma-tran" || tabPhai === "dac-ta") {
@@ -219,26 +224,29 @@
       nd = `<table><thead><tr><th>Câu</th><th>Điểm</th><th>Đáp án và biểu điểm</th></tr></thead><tbody>
         ${de.cau.map(c => hang(c, `<td>${esc(c.phan)} ${c.so}</td><td class="so">${viet(c.diem)}</td><td><textarea class="o-da" data-c="${c.id}" rows="3" placeholder="Đáp án, chia ý và điểm">${esc(c.dap_an)}</textarea></td>`)).join("")}</tbody></table>`;
     } else {
-      const lk = i => i.cau ? `<button data-toi="${i.cau}">đến câu</button>` : "";
-      const nhom = ["Số liệu", "Nội dung"].map(g => ({ g, ds: kt.loi.filter(i => i.nhom === g) })).filter(x => x.ds.length);
-      nd = (!kt.loi.length && !kt.canLam.length ? `<div class="dat">Số liệu và nội dung đang khớp, không còn việc nào.</div>` : "")
-        + nhom.map(x => `<div class="nhom-kt">${x.g}</div><ul class="kt">${x.ds.map(i => `<li class="loi">${esc(i.t)}${lk(i)}</li>`).join("")}</ul>`).join("")
-        + (kt.canLam.length ? `<div class="nhom-kt">Còn phải làm</div><ul class="kt">${kt.canLam.map(i => `<li class="nhac">${esc(i.t)}</li>`).join("")}</ul>` : "")
-        + `<p class="nho chua">Bộ kiểm tra đầy đủ (độ khớp giữa bốn văn bản, hình thức) sẽ bổ sung sau.</p>`;
+      const kq = kt.kq, lk = i => i.cau ? `<button data-toi="${i.cau}">đến câu</button>` : "";
+      const THU_TU = { loi: 0, nhac: 1, dat: 2 }, DAU = { loi: "✗", nhac: "!", dat: "✓" };
+      nd = `<div class="tom-tat-kt"><span class="so-loi"><b>${kq.loi}</b> lỗi phải sửa</span><span class="so-nhac"><b>${kq.nhac}</b> mục nên xem</span><span class="so-dat"><b>${kq.dat}</b> mục đạt</span></div>
+        ${!kq.loi && !kq.nhac ? `<div class="dat">Đề, ma trận, bản đặc tả và đáp án đã khớp nhau.</div>` : ""}
+        ${Object.entries(kq.nhom).map(([g, ds]) => `<div class="nhom-kt">${g}</div><ul class="kt">${ds.slice().sort((a, b) => THU_TU[a.kieu] - THU_TU[b.kieu])
+          .map(i => `<li class="${i.kieu}"><span class="dau-kt">${DAU[i.kieu]}</span> ${esc(i.t)}${i.kieu !== "dat" ? lk(i) : ""}</li>`).join("")}</ul>`).join("")}
+        <div class="nhom-kt">Người duyệt tự xác nhận</div><ul class="kt">${kq.xac_nhan.map(t => `<li class="xn"><span class="dau-kt">○</span> ${esc(t)}</li>`).join("")}</ul>
+        <p class="nho chua">Máy chỉ đối chiếu số liệu và hình thức; độ đúng của đáp án, mức độ và nguồn do người soạn quyết định.</p>`;
     }
     $("#sd-phai").innerHTML = `<h3>Văn bản đi kèm</h3><div class="tab-phai">${nhan.map(([m, t]) => `<button data-tp="${m}" class="${m === tabPhai ? "dang-chon" : ""}">${t}</button>`).join("")}</div>${nd}`;
+    veLoiCau(kt.kq);
   }
 
   // ---------- Thanh trạng thái ----------
   function veTrangThai() {
     const k = khungCua(de.khung_ma), kt = kiemTraDe(), n = soChuThe(), mc = k.moc_chu;
-    const viec = kt.loi.length + kt.canLam.length;
+    const viec = kt.viec;
     const lopChu = !de.the ? "" : (mc && (n < mc.tu || n > mc.den) ? "canh" : "tot");
     $("#sd-tt").innerHTML = `
       <span class="tt ${kt.tong === 10 ? "tot" : "loi"}">Tổng điểm <b>${viet(kt.tong)}</b>/10</span>
       <span class="tt ${lopChu}">Ngữ liệu <b>${n}</b> chữ ${mc ? `<small>mốc ${mc.tu} đến ${mc.den}</small>` : ""}</span>
       <span class="tt ${kt.trang > 2 ? "canh" : ""}" title="Tạm tính ${CHU_MOT_TRANG} chữ một trang, chưa dàn trang thật">Trang ước tính <b>${viet(kt.trang)}</b></span>
-      <button class="tt nut-viec ${viec ? (kt.loi.length ? "loi" : "canh") : "tot"}" id="sd-viec">Việc còn lại <b>${viec}</b></button>
+      <button class="tt nut-viec ${viec ? (kt.kq.loi ? "loi" : "canh") : "tot"}" id="sd-viec">Việc còn lại <b>${viec}</b></button>
       <span class="gian"><button class="nut-xanh" id="sd-tt-word">Tải file Word</button></span>`;
   }
 
@@ -432,9 +440,10 @@
   }
 
   function kiemTruocXuat() {
-    const thieu = de.cau.filter(c => !c.noi_dung.trim()).length, viec = [];
+    const thieu = de.cau.filter(c => !c.noi_dung.trim()).length, viec = [], soLoi = kiemTraDe().kq.loi;
     if (!de.the) viec.push("chưa chọn ngữ liệu");
     if (thieu) viec.push(thieu + " câu chưa có nội dung");
+    if (soLoi) viec.push(soLoi + " lỗi ở thẻ Kiểm tra");
     return !viec.length || confirm("Đề còn: " + viec.join("; ") + ". Vẫn tiếp tục?");
   }
 

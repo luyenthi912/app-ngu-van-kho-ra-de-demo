@@ -359,3 +359,16 @@ button { font: inherit; cursor: pointer; }
   #sd-vung-in table { border-collapse: collapse; page-break-inside: auto; }
   #sd-vung-in tr { page-break-inside: avoid; }
 }
+
+/* ---------- Kiểm tra độ khớp ---------- */
+.tom-tat-kt { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; margin: 0 0 8px; }
+.tom-tat-kt .so-loi b { color: var(--do); }
+.tom-tat-kt .so-nhac b { color: var(--vang); }
+.tom-tat-kt .so-dat b { color: #2E6B1F; }
+.cot-phai ul.kt li.dat { background: #F1F7EE; border-color: #7FAF6B; color: #2E5A22; font-size: 13px; padding: 4px 8px 4px 10px; }
+.cot-phai ul.kt li.xn { background: var(--nen); border-color: var(--vien); color: var(--chu-phu); font-size: 13px; }
+.cot-phai .dau-kt { display: inline-block; width: 14px; font-weight: 700; }
+.cau-loi { margin-top: 4px; font-size: 13px; line-height: 1.4; }
+.cau-loi:empty { display: none; }
+.cau-loi .loi { color: var(--do); }
+.cau-loi .nhac { color: #8A5A12; }
