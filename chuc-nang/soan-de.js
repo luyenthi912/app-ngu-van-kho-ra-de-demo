@@ -44,12 +44,34 @@
   // Câu hỏi trong ngân hàng hợp với vị trí câu: cùng thẻ ngữ liệu, cùng phần; đúng mức đứng trước.
   // Ô đoạn văn của phần Viết (dang "doan-van", khung THCS 5-5 và 4-6) lấy các câu viết đoạn văn của thẻ.
   const laDoanVan = q => /^Đảm bảo hình thức đoạn văn/.test((q.y && q.y[0] && q.y[0].nd) || "");
-  function nganHangCho(c) {
-    if (!de.the || de.the.kieu !== "kho") return [];
-    if (c.dang === "doan-van") return NH.filter(q => q.the === de.the.ma && laDoanVan(q));
-    const ms = mucCua(c), muc = ms.length > 1 ? "Nhiều mức" : ms[0];
-    return NH.filter(q => q.the === de.the.ma && q.phan === c.phan).sort((a, b) => (b.muc === muc) - (a.muc === muc));
+  // Ngữ liệu 2 (phần Viết) gắn vào một câu Viết; mặc định câu bài văn (không phải ô đoạn văn) có điểm cao nhất.
+  function cauNL2() {
+    if (!de.the2) return null;
+    const vs = de.cau.filter(c => c.phan === "Viết");
+    const chon = vs.find(c => c.id === de.nl2_cau);
+    if (chon) return chon;
+    const bai = vs.filter(c => c.dang !== "doan-van");
+    return (bai.length ? bai : vs).slice().sort((a, b) => b.diem - a.diem)[0] || null;
   }
+  const theCua = c => { const c2 = cauNL2(); return c2 && c2.id === c.id ? de.the2 : de.the; };
+  // Đề so sánh: hai thẻ là cặp ghép trong Kho thì câu Viết gắn ngữ liệu 2 ưu tiên đề so sánh nêu tên cả hai văn bản.
+  function laCap() {
+    if (!de.the || !de.the2 || de.the.kieu !== "kho" || de.the2.kieu !== "kho") return false;
+    const t1 = kho.find(x => x.ma === de.the.ma), t2 = kho.find(x => x.ma === de.the2.ma);
+    return !!((t1 && (t1.ghep_cap || []).includes(de.the2.ma)) || (t2 && (t2.ghep_cap || []).includes(de.the.ma)));
+  }
+  const coTen = (s, t) => !!(t && t.nhan_de) && String(s || "").includes("“" + t.nhan_de + "”");
+  const deSoSanhCap = q => coTen(q.noi_dung, de.the) && coTen(q.noi_dung, de.the2);
+  function nganHangCho(c) {
+    const t = theCua(c);
+    if (!t || t.kieu !== "kho") return [];
+    if (c.dang === "doan-van") return NH.filter(q => q.the === t.ma && laDoanVan(q));
+    const ms = mucCua(c), muc = ms.length > 1 ? "Nhiều mức" : ms[0];
+    const cap = c.phan === "Viết" && t === de.the2 && laCap();
+    return NH.filter(q => q.phan === c.phan && (q.the === t.ma || (cap && q.the === de.the.ma && deSoSanhCap(q))))
+      .sort((a, b) => (cap ? deSoSanhCap(b) - deSoSanhCap(a) : 0) || (b.muc === muc) - (a.muc === muc));
+  }
+  const coNganHang = () => [de.the, de.the2].some(t => t && t.kieu === "kho" && NH.some(q => q.the === t.ma));
   const dungO = q => de.cau.find(x => x.nguon_nh === q.ma);
   // Đổi trọng số các ý ra điểm theo điểm câu; ưu tiên bước 0,25, chỉ dùng 0,125 khi không chia đều được.
   const so3 = x => Math.round(x * 1000) / 1000;
@@ -89,7 +111,7 @@
     const lop = k.lop[0], b = baiCuaLop(lop)[0];
     return { id: "DE-" + Date.now().toString(36), ten: "", khung_ma: k.ma, lop, bai: b ? b.bai : "", the: null, cau: k.cau.map(saoCau), ngay_sua: "" };
   }
-  const coNoiDung = d => !!(d.ten || d.the || d.cau.some(c => c.noi_dung || c.yccd.length || c.duyet || c.dap_an));
+  const coNoiDung = d => !!(d.ten || d.the || d.the2 || d.cau.some(c => c.noi_dung || c.yccd.length || c.duyet || c.dap_an));
   const daLuu = () => { const x = doc(K_DA_LUU, []).find(e => e.id === de.id); return !!x && JSON.stringify(Object.assign({}, x, { ngay_sua: "" })) === JSON.stringify(Object.assign({}, de, { ngay_sua: "" })); };
   function tuLuu() { ghi(K_HIEN_TAI, de); }
 
@@ -104,13 +126,32 @@
     }));
     return { kieu: "kho", ma: t.ma, the_loai: t.the_loai || "", nhan_de: t.nhan_de, loi_dan: t.loi_dan || "", van_ban: t.van_ban || "", nguon: D.dongNguon(t.nguon), nguon_du: nguonDu(t.nguon), chu_thich: ct, so_chu: t.so_chu };
   }
-  const soChuThe = () => (de.the ? D.demChu(de.the.van_ban) : 0);
+  const soChuNL = t => (t ? D.demChu(t.van_ban) : 0);
+  const soChuThe = () => soChuNL(de.the) + soChuNL(de.the2);   // tổng ngữ liệu 1 và ngữ liệu 2
+  const dongSoChu = () => de.the2 ? `NL1 ${soChuNL(de.the)} + NL2 ${soChuNL(de.the2)} = ${soChuThe()} chữ` : `${soChuThe()} chữ`;
+  // Văn bản tự nhập: thể loại, tác giả, tên tác phẩm và nơi in đăng ghép thành dòng nguồn cho tờ đề, ma trận, bản đặc tả.
+  const opTheLoai = () => D.CAY_THE_LOAI.map(g => `<optgroup label="${esc(g.ten)}">${g.con.map(x => `<option>${esc(x)}</option>`).join("")}</optgroup>`).join("");
+  const formTay = s => `
+          <label>Lời dẫn (nếu có)<textarea id="sd-tay${s}-dan" rows="2"></textarea></label>
+          <label>Văn bản<textarea id="sd-tay${s}-vb" rows="5"></textarea></label>
+          <label>Thể loại<select id="sd-tay${s}-tl"><option value="">— Chọn thể loại —</option>${opTheLoai()}</select></label>
+          <div class="hang-2"><label>Tác giả<input id="sd-tay${s}-tg"></label><label>Tên tác phẩm, văn bản<input id="sd-tay${s}-ten"></label></div>
+          <label>Nơi in, đăng (báo hoặc sách, năm, đường dẫn)<textarea id="sd-tay${s}-nguon" rows="2"></textarea></label>
+          <div class="hang-nut"><button class="nut-xanh" id="sd-tay${s}-dung">Dùng văn bản này</button></div>`;
+  function theTay(s) {
+    const g = id => (($("#sd-tay" + s + "-" + id) || {}).value || "").trim();
+    const vb = g("vb");
+    if (!vb) { thongBao("Chưa có văn bản"); return null; }
+    const tg = g("tg"), ten = g("ten"), noi = g("nguon");
+    const nguon = [tg, ten && "“" + ten + "”", noi].filter(Boolean).join(", ");
+    return { kieu: "tay", ma: "", the_loai: g("tl"), nhan_de: ten, loi_dan: g("dan"), van_ban: vb, nguon, nguon_du: !!(tg && ten && noi), chu_thich: [], so_chu: D.demChu(vb) };
+  }
 
   // ---------- Kiểm tra độ khớp (việc 6, xem ra-de/kiem-tra-khop.js) ----------
   function trungSgk() {
     if (!de.the || de.the.kieu !== "kho") return null;
-    const t = kho.find(x => x.ma === de.the.ma);
-    return t ? D.doiChieuSgk(t).map(D.moTaSgk) : null;
+    const ds = [de.the, de.the2].filter(t => t && t.kieu === "kho").map(x => kho.find(t => t.ma === x.ma)).filter(Boolean);
+    return ds.length ? [].concat(...ds.map(t => D.doiChieuSgk(t).map(D.moTaSgk))) : null;
   }
   function kiemTraDe() {
     const k = khungCua(de.khung_ma), ctx = ctxSinh(), SV = window.SinhVanBan;
@@ -145,9 +186,20 @@
     const cungLop = kho.filter(t => t.lop.includes(de.lop) && !khop.includes(t));
     const khac = kho.filter(t => !khop.includes(t) && !cungLop.includes(t));
     const tatCaThe = $("#sd-tatca") ? $("#sd-tatca").checked : false;
-    const op = t => `<option value="${esc(t.ma)}" ${de.the && de.the.ma === t.ma ? "selected" : ""}>${esc(t.nhan_de)} · ${esc((t.nguon || {}).tac_gia || "")} · ${t.so_chu} chữ</option>`;
+    const opCua = chon => t => `<option value="${esc(t.ma)}" ${chon && chon.ma === t.ma ? "selected" : ""}>${esc(t.nhan_de)} · ${esc((t.nguon || {}).tac_gia || "")} · ${esc(t.the_loai || "")} · ${t.so_chu} chữ</option>`;
+    const op = opCua(de.the), op2 = opCua(de.the2);
+    const nhomThe = (op_, bo) => [["Khớp bài này", khop], ["Cùng lớp, bài khác", cungLop], ["Lớp khác", tatCaThe ? khac : []]]
+      .map(([nhan, ds]) => { ds = ds.filter(t => !bo || t.ma !== bo); return ds.length ? `<optgroup label="${nhan}">${ds.map(op_).join("")}</optgroup>` : ""; }).join("");
     const daLuuDs = doc(K_DA_LUU, []);
-    const mc = k.moc_chu, n = soChuThe();
+    const mc = k.moc_chu, n = soChuNL(de.the);
+    // Ngữ liệu 2: gợi ý thẻ ghép cặp của ngữ liệu Đọc hiểu (đề so sánh), chọn câu Viết dùng ngữ liệu 2.
+    const t1 = de.the && de.the.kieu === "kho" ? kho.find(x => x.ma === de.the.ma) : null;
+    const capGoiY = t1 ? (t1.ghep_cap || []).map(m => kho.find(x => x.ma === m)).filter(x => x && !(de.the2 && de.the2.ma === x.ma)) : [];
+    const viets = de.cau.filter(c => c.phan === "Viết"), c2 = cauNL2();
+    const khoiNL2 = de.the2 ? `<div class="o-tom-tat"><b>${esc(de.the2.nhan_de || "Văn bản tự nhập")}</b>${de.the2.the_loai ? " · " + esc(de.the2.the_loai) : ""}<br>${esc(de.the2.nguon || "Chưa ghi nguồn")}<br>${soChuNL(de.the2)} chữ${de.the2.nguon_du ? "" : `<br><b style="color:var(--do)">Thiếu nguồn</b>`}${de.the2.the_loai ? "" : `<br><b style="color:var(--do)">Chưa có thể loại</b>`}
+          ${viets.length > 1 ? `<label>Gắn vào câu<select id="sd-nl2-cau">${viets.map(c => `<option value="${c.id}" ${c2 && c2.id === c.id ? "selected" : ""}>Viết, câu ${c.so} (${viet(c.diem)} điểm${c.dang === "doan-van" ? ", đoạn văn" : ""})</option>`).join("")}</select></label>` : `<div class="nho">Gắn vào câu Viết ${c2 ? c2.so : ""}.</div>`}
+          <div class="hang-nut"><button class="nut-bo" id="sd-bo-the2">Bỏ ngữ liệu 2</button></div></div>
+          <div class="nho">Tổng ngữ liệu: ${dongSoChu()}${mc ? ` (mốc ${mc.tu} đến ${mc.den})` : ""}</div>` : `<div class="nho">Không dùng ngữ liệu 2: câu Viết không kèm văn bản riêng.</div>`;
     $("#sd-trai").innerHTML = `
       <div class="trai-dau"><h3>Thiết lập</h3><button class="nut-bo" id="sd-thu" title="Thu gọn hoặc mở cột">${$("#sd-goc").classList.contains("thu-gon") ? "›" : "‹"}</button></div>
       <div class="trai-ruot">
@@ -167,20 +219,18 @@
 
         <h4>Ngữ liệu Đọc hiểu</h4>
         <label>Chọn từ Kho
-          <select id="sd-the"><option value="">— Chưa chọn —</option>
-            ${khop.length ? `<optgroup label="Khớp bài này">${khop.map(op).join("")}</optgroup>` : ""}
-            ${cungLop.length ? `<optgroup label="Cùng lớp, bài khác">${cungLop.map(op).join("")}</optgroup>` : ""}
-            ${tatCaThe && khac.length ? `<optgroup label="Lớp khác">${khac.map(op).join("")}</optgroup>` : ""}
-          </select></label>
+          <select id="sd-the"><option value="">— Chưa chọn —</option>${nhomThe(op)}</select></label>
         <label class="o-chon"><input type="checkbox" id="sd-tatca" ${tatCaThe ? "checked" : ""}> Hiện cả thẻ của lớp khác</label>
-        ${de.the ? `<div class="o-tom-tat"><b>${esc(de.the.nhan_de || "Văn bản tự nhập")}</b>${esc(de.the.nguon || "Chưa ghi nguồn")}<br>${n} chữ${mc ? ` <span class="nho">(mốc ${mc.tu} đến ${mc.den})</span>` : ""}${de.the.nguon_du ? "" : `<br><b style="color:var(--do)">Thiếu nguồn</b>`}
+        ${de.the ? `<div class="o-tom-tat"><b>${esc(de.the.nhan_de || "Văn bản tự nhập")}</b>${de.the.the_loai ? " · " + esc(de.the.the_loai) : ""}<br>${esc(de.the.nguon || "Chưa ghi nguồn")}<br>${n} chữ${mc && !de.the2 ? ` <span class="nho">(mốc ${mc.tu} đến ${mc.den})</span>` : ""}${de.the.nguon_du ? "" : `<br><b style="color:var(--do)">Thiếu nguồn</b>`}
           <div class="hang-nut"><button class="nut-bo" id="sd-bo-the">Bỏ ngữ liệu</button></div></div>` : `<div class="nho">Chưa chọn ngữ liệu.</div>`}
-        <details id="sd-tay"><summary>Dán văn bản tự nhập</summary>
-          <label>Lời dẫn (nếu có)<textarea id="sd-tay-dan" rows="2"></textarea></label>
-          <label>Văn bản<textarea id="sd-tay-vb" rows="5"></textarea></label>
-          <label>Nguồn đầy đủ (tác giả, tác phẩm, báo hoặc sách, năm, đường dẫn)<textarea id="sd-tay-nguon" rows="2"></textarea></label>
-          <div class="hang-nut"><button class="nut-xanh" id="sd-tay-dung">Dùng văn bản này</button></div>
-        </details>
+        <details id="sd-tay"><summary>Dán văn bản tự nhập</summary>${formTay("")}</details>
+
+        <h4>Ngữ liệu phần Viết (ngữ liệu 2)</h4>
+        <div class="nho">Dùng khi câu Viết dựa vào một văn bản khác ngữ liệu Đọc hiểu: đề phân tích một văn bản khác thể loại, đề so sánh hai văn bản.</div>
+        ${capGoiY.map(x => `<div class="nho">Thẻ ghép cặp của ngữ liệu Đọc hiểu: <b>${esc(x.nhan_de)}</b> <button class="nut-bo" data-cap="${esc(x.ma)}">Dùng làm ngữ liệu 2</button></div>`).join("")}
+        <label>Chọn từ Kho<select id="sd-the2"><option value="">— Không dùng —</option>${nhomThe(op2, de.the && de.the.ma)}</select></label>
+        ${khoiNL2}
+        <details id="sd-tay2"><summary>Dán văn bản tự nhập</summary>${formTay("2")}</details>
 
         <h4>Đề đã lưu</h4>
         <div class="hang-nut"><button class="nut-xanh" id="sd-luu">Lưu đề</button><button class="nut-bo" id="sd-moi">Đề mới</button></div>
@@ -195,7 +245,7 @@
     const la = y && !(yCuaBai(de.lop, de.bai).some(z => z.ma === ma));
     return `<span class="chip-y ${la ? "la" : ""}" title="${esc(y ? `${y.bai}: ${y.nd}` : "Không còn trong kho")}">${esc(ma)}</span>`;
   }
-  const ctxSinh = () => ({ de, khung: khungCua(de.khung_ma), yccd: MA_YCCD });
+  const ctxSinh = () => { const c2 = cauNL2(); return { de, khung: khungCua(de.khung_ma), yccd: MA_YCCD, nl2: c2 ? { cau: c2.id, the: de.the2 } : null }; };
   function veCau(c) {
     const don = Object.keys(c.muc).length === 1;
     const muc = don ? Object.keys(c.muc)[0] : null;
@@ -230,20 +280,21 @@
   function veGiua() {
     const k = khungCua(de.khung_ma);
     const so_la = ["I", "II", "III", "IV", "V"];
-    const khoiNgu = () => {
-      const t = de.the;
+    // Chú thích của ngữ liệu nào đặt ngay dưới ngữ liệu đó, đánh số nối tiếp (ngữ liệu 2 bắt đầu sau số cuối của ngữ liệu 1).
+    const soCT1 = de.the && de.the.chu_thich ? de.the.chu_thich.length : 0, c2 = cauNL2();
+    const khoiNgu = (t, nhan, bd) => {
       if (!t) return `<div class="ngu-lieu trong">Chưa chọn ngữ liệu. Chọn từ Kho hoặc dán văn bản ở cột bên trái.</div>`;
-      return `<div class="ngu-lieu"><div>Đọc văn bản sau:</div>
+      return `<div class="ngu-lieu">${nhan ? `<div class="nho"><b>${esc(nhan)}</b></div>` : ""}<div>Đọc văn bản sau:</div>
         ${t.loi_dan ? `<div class="loi-dan">${esc(t.loi_dan)}</div>` : ""}
         <div class="vb">${esc(t.van_ban)}</div>
         <div class="nguon">${esc(t.nguon ? "(Nguồn: " + t.nguon + ")" : "")}</div>
-        ${t.chu_thich && t.chu_thich.length ? `<div class="chu-thich"><b>Chú thích</b><br>${t.chu_thich.map((x, i) => `${i + 1}. ${esc(x.tu)}: ${esc(x.nghia)}`).join("<br>")}</div>` : ""}</div>`;
+        ${t.chu_thich && t.chu_thich.length ? `<div class="chu-thich"><b>Chú thích</b><br>${t.chu_thich.map((x, i) => `(${bd + i + 1}) ${esc(x.tu)}: ${esc(x.nghia)}`).join("<br>")}</div>` : ""}</div>`;
     };
     $("#sd-giua").innerHTML = `<div class="hang-hanh-dong">
         <button class="nut-xanh" id="sd-nut-in">In / Lưu PDF</button>
         <button class="nut-bo" id="sd-nut-word">Tải file Word (.doc)</button>
         <label class="o-chon"><input type="checkbox" id="sd-kem" ${kemBang ? "checked" : ""}> Kèm ma trận, bản đặc tả, đáp án</label>
-        ${de.the && NH.some(q => q.the === de.the.ma) ? `<button class="nut-bo" id="sd-dien-nhanh" title="Điền các câu còn trống bằng câu hỏi mẫu cùng mức">Điền nhanh từ ngân hàng</button>` : ""}
+        ${coNganHang() ? `<button class="nut-bo" id="sd-dien-nhanh" title="Điền các câu còn trống bằng câu hỏi mẫu cùng mức">Điền nhanh từ ngân hàng</button>` : ""}
       </div>
       <article class="giay-de">
       <div id="sd-dau-de">${dauDeHtml()}</div>
@@ -252,7 +303,7 @@
         const cs = de.cau.filter(c => c.phan === p.ten);
         const heDuyet = cs.length && cs.every(c => c.duyet);
         return `<h4><span>${so_la[i]}. ${esc(p.ten.toUpperCase())} (${viet(p.diem)} điểm)</span><button class="nut-bo" data-duyet-phan="${esc(p.ten)}">${heDuyet ? "Bỏ duyệt cả phần" : "Duyệt cả phần"}</button></h4>
-          ${p.ten === "Đọc hiểu" ? khoiNgu() : ""}${cs.map(veCau).join("")}`;
+          ${p.ten === "Đọc hiểu" ? khoiNgu(de.the, de.the2 ? "Ngữ liệu 1 (Đọc hiểu)" : "", 0) : ""}${cs.map(c => (c2 && c.id === c2.id ? khoiNgu(de.the2, `Ngữ liệu 2 · dùng cho câu Viết ${c.so}`, soCT1) : "") + veCau(c)).join("")}`;
       }).join("")}
       <div class="thuong-hieu">Soạn thảo từ Kho Ngữ liệu Ngữ văn · Kết Nối Tri Thức</div>
     </article>`;
@@ -295,7 +346,7 @@
     const lopChu = !de.the ? "" : (mc && (n < mc.tu || n > mc.den) ? "canh" : "tot");
     $("#sd-tt").innerHTML = `
       <span class="tt ${kt.tong === 10 ? "tot" : "loi"}">Tổng điểm <b>${viet(kt.tong)}</b>/10</span>
-      <span class="tt ${lopChu}">Ngữ liệu <b>${n}</b> chữ ${mc ? `<small>mốc ${mc.tu} đến ${mc.den}</small>` : ""}</span>
+      <span class="tt ${lopChu}">Ngữ liệu <b>${esc(dongSoChu())}</b> ${mc ? `<small>mốc ${mc.tu} đến ${mc.den}</small>` : ""}</span>
       <span class="tt ${kt.trang > 2 ? "canh" : ""}" title="Tạm tính ${CHU_MOT_TRANG} chữ một trang, chưa dàn trang thật">Trang ước tính <b>${viet(kt.trang)}</b></span>
       <button class="tt nut-viec ${viec ? (kt.kq.loi ? "loi" : "canh") : "tot"}" id="sd-viec">Việc còn lại <b>${viec}</b></button>
       <span class="gian"><button class="nut-xanh" id="sd-tt-word">Tải file Word</button></span>`;
@@ -323,12 +374,10 @@
     const t = e.target.closest("button"); if (!t) return;
     if (t.id === "sd-thu") { $("#sd-goc").classList.toggle("thu-gon"); t.textContent = $("#sd-goc").classList.contains("thu-gon") ? "›" : "‹"; }
     else if (t.id === "sd-bo-the") { de.the = null; tuLuu(); veTatCa(); }
-    else if (t.id === "sd-tay-dung") {
-      const vb = $("#sd-tay-vb").value.trim(), ng = $("#sd-tay-nguon").value.trim();
-      if (!vb) return thongBao("Chưa có văn bản");
-      de.the = { kieu: "tay", ma: "", the_loai: "", nhan_de: "", loi_dan: $("#sd-tay-dan").value.trim(), van_ban: vb, nguon: ng, nguon_du: ng.length >= 10, chu_thich: [], so_chu: D.demChu(vb) };
-      tuLuu(); veTatCa();
-    }
+    else if (t.id === "sd-bo-the2") { de.the2 = null; de.nl2_cau = ""; tuLuu(); veTatCa(); }
+    else if (t.id === "sd-tay-dung") { const x = theTay(""); if (x) { de.the = x; tuLuu(); veTatCa(); } }
+    else if (t.id === "sd-tay2-dung") { const x = theTay("2"); if (x) { de.the2 = x; de.nl2_cau = ""; tuLuu(); veTatCa(); } }
+    else if (t.dataset.cap) { datNL2(kho.find(x => x.ma === t.dataset.cap)); }
     else if (t.id === "sd-luu") {
       de.ngay_sua = new Date().toISOString().slice(0, 10);
       const ds = doc(K_DA_LUU, []).filter(x => x.id !== de.id).concat([JSON.parse(JSON.stringify(de))]);
@@ -369,9 +418,17 @@
     } else if (id === "sd-bai") { de.bai = e.target.value; moGan = null; tuLuu(); veTatCa(); }
     else if (id === "sd-the") {
       const t = kho.find(x => x.ma === e.target.value);
-      de.the = t ? chupThe(t) : null; tuLuu(); veTatCa();
-    } else if (id === "sd-tatca") veTrai();
+      de.the = t ? chupThe(t) : null;
+      if (de.the && de.the2 && de.the2.ma === de.the.ma) { de.the2 = null; thongBao("Ngữ liệu 2 trùng ngữ liệu Đọc hiểu nên đã bỏ."); }
+      tuLuu(); veTatCa();
+    } else if (id === "sd-the2") datNL2(kho.find(x => x.ma === e.target.value));
+    else if (id === "sd-nl2-cau") { de.nl2_cau = e.target.value; tuLuu(); veTatCa(); }
+    else if (id === "sd-tatca") veTrai();
   });
+  function datNL2(t) {
+    if (t && de.the && de.the.ma === t.ma) { thongBao("Ngữ liệu 2 phải khác ngữ liệu Đọc hiểu."); veTrai(); return; }
+    de.the2 = t ? chupThe(t) : null; de.nl2_cau = ""; moNH = null; tuLuu(); veTatCa();
+  }
 
   giua.addEventListener("focusin", e => { const c = e.target.closest("[data-cau]"); if (c) chonCau(c.dataset.cau); });
   giua.addEventListener("click", e => {
@@ -490,18 +547,23 @@
       ${de.cau.map(c => `<tr><td${td}>${esc(c.phan)} ${c.so}</td><td${td}>${diemChu(c.diem)}</td><td${td}>${dongVan(c.dap_an || "")}</td></tr>`).join("")}</table>`;
   }
 
+  // Một ngữ liệu trên tờ đề: lời dẫn, văn bản, nguồn, chú thích ngay dưới (đánh số nối tiếp từ bd + 1).
+  function nguLieuHtml(t, bd) {
+    let h = `<p><i>Đọc văn bản sau:</i></p>${t.loi_dan ? `<p><i>${dongVan(t.loi_dan)}</i></p>` : ""}${doanVan(t.van_ban, laTho(t))}`;
+    if (t.nguon) h += `<p class="vb-nguon">(Nguồn: ${esc(t.nguon)})</p>`;
+    if (t.chu_thich && t.chu_thich.length) h += `<p class="vb-chuthich"><b>Chú thích:</b> ${t.chu_thich.map((x, i) => `(${bd + i + 1}) ${esc(x.tu)}: ${esc(x.nghia)}`).join("; ")}.</p>`;
+    return h;
+  }
   function taoHtmlDe() {
-    const k = khungCua(de.khung_ma), t = de.the;
+    const k = khungCua(de.khung_ma), t = de.the, c2 = cauNL2();
+    const soCT1 = t && t.chu_thich ? t.chu_thich.length : 0;
     let h = dauDeHtml();
     if (de.ten.trim()) h += `<p class="vb-tieude">${esc(de.ten.trim().toUpperCase())}</p>`;
     k.phan.forEach((p, i) => {
       h += `<p class="vb-phan">${SO_LA[i]}. ${esc(p.ten.toUpperCase())} (${diemChu(p.diem)} điểm)</p>`;
-      if (p.ten === "Đọc hiểu" && t) {
-        h += `<p><i>Đọc văn bản sau:</i></p>${t.loi_dan ? `<p><i>${dongVan(t.loi_dan)}</i></p>` : ""}${doanVan(t.van_ban, laTho(t))}`;
-        if (t.nguon) h += `<p class="vb-nguon">(Nguồn: ${esc(t.nguon)})</p>`;
-        if (t.chu_thich && t.chu_thich.length) h += `<p class="vb-chuthich"><b>Chú thích:</b> ${t.chu_thich.map(x => `${esc(x.tu)}: ${esc(x.nghia)}`).join("; ")}.</p>`;
-      }
+      if (p.ten === "Đọc hiểu" && t) h += nguLieuHtml(t, 0);
       de.cau.filter(c => c.phan === p.ten).forEach(c => {
+        if (c2 && c.id === c2.id) h += nguLieuHtml(de.the2, soCT1);   // ngữ liệu 2 in ngay trước câu dùng nó
         h += `<p class="vb-cau"><b>Câu ${c.so} (${diemChu(c.diem)} điểm).</b> ${dongVan(c.noi_dung)}</p>`;
       });
     });
