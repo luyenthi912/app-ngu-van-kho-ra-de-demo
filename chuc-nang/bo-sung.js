@@ -55,7 +55,7 @@
     };
     const nhap = ds.filter(t => t.nhap), daLuu = ds.filter(t => !t.nhap);
     $("#hang-cho").innerHTML = nhap.map(dong).join("") || `<li class="trong">Không có thẻ nào đang chờ.</li>`;
-    $("#da-bo-sung").innerHTML = daLuu.map(dong).join("") || `<li class="trong">Cô chưa bổ sung thẻ nào vào kho.</li>`;
+    $("#da-bo-sung").innerHTML = daLuu.map(dong).join("") || `<li class="trong">Thầy/Cô chưa tự thêm thẻ nào vào kho.</li>`;
     $("#dem-hang-cho").textContent = nhap.length;
     $("#dem-da-bo-sung").textContent = daLuu.length;
     document.querySelectorAll("[data-sua]").forEach(b => b.onclick = () => moForm(b.dataset.sua));
@@ -370,7 +370,17 @@
     r.readAsText(file);
     e.target.value = "";
   };
-  $("#mo-form-moi").onclick = () => moForm(null);
+  function themNhap(x) {
+    const ds = D.docTuBoSung();
+    const the = {
+      ma: maMoi(ds), nhan_de: x.nhan_de || "", van_ban: x.van_ban || "", the_loai: x.the_loai || "",
+      nguon: { tac_gia: x.tac_gia || "", tac_pham: x.nhan_de || "" },
+      phu_hop: x.lop ? [{ lop: Number(x.lop), bai: "", tieu_diem: [] }] : [],
+      nhap: true, trang_thai_duyet: "Chờ duyệt", ngay_tao: homNay(), ngay_sua: homNay(), da_dung: []
+    };
+    try { D.ghiTuBoSung(ds.concat([the])); } catch (e) { return null; }
+    return the.ma;
+  }
 
-  window.KhoBoSung = { moForm, moMan };
+  window.KhoBoSung = { moForm, moMan, themNhap };
 })();

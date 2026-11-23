@@ -219,13 +219,14 @@
         <label>Tên đề<input id="sd-ten" value="${esc(de.ten)}" placeholder="Ví dụ: Đề kiểm tra giữa kì I, đề 1"></label>
 
         <h4>Thông tin đầu trang đề</h4>
-        <label>Sở / Phòng GD&amp;ĐT<input id="sd-h-so" value="${esc(dau.so)}" placeholder="SỞ GD&amp;ĐT HÀ NỘI"></label>
-        <label>Tên trường<input id="sd-h-truong" value="${esc(dau.truong)}" placeholder="TRƯỜNG THPT ..."></label>
+        <label>Sở / Phòng GD&amp;ĐT<input id="sd-h-so" value="${esc(dau.so)}" placeholder="SỞ GD&amp;ĐT ... / PHÒNG GD&amp;ĐT ..."></label>
+        <label>Tên trường<input id="sd-h-truong" value="${esc(dau.truong)}" placeholder="TRƯỜNG ..."></label>
         <label>Tên kì kiểm tra<input id="sd-h-ky" value="${esc(dau.ky)}" placeholder="KIỂM TRA GIỮA KÌ I - NĂM HỌC 2026 - 2027"></label>
         <label>Thời gian làm bài<input id="sd-h-tg" value="${esc(dau.tg)}" placeholder="90 phút, không kể thời gian phát đề"></label>
         <div class="nho">Lưu trên máy này, lần sau mở app tự điền sẵn. Để trống cả bốn ô thì đề chỉ có dòng môn và thời gian.</div>
 
         <h4>Ngữ liệu Đọc hiểu</h4>
+        <div class="hang-nut"><button class="nut-vang nut-dan-nhanh" id="sd-dan-nhanh">+ Dán nhanh ngữ liệu riêng</button></div>
         <label>Chọn từ Kho
           <select id="sd-the"><option value="">— Chưa chọn —</option>${nhomThe(op)}</select></label>
         <label class="o-chon"><input type="checkbox" id="sd-tatca" ${tatCaThe ? "checked" : ""}> Hiện cả thẻ của lớp khác</label>
@@ -377,6 +378,7 @@
     if (t.id === "sd-thu") { $("#sd-goc").classList.toggle("thu-gon"); t.textContent = $("#sd-goc").classList.contains("thu-gon") ? "›" : "‹"; }
     else if (t.id === "sd-bo-the") { de.the = null; tuLuu(); veTatCa(); }
     else if (t.id === "sd-bo-the2") { de.the2 = null; de.nl2_cau = ""; tuLuu(); veTatCa(); }
+    else if (t.id === "sd-dan-nhanh") { moDanNhanh(); }
     else if (t.id === "sd-tay-dung") { const x = theTay(""); if (x) { de.the = x; tuLuu(); veTatCa(); } }
     else if (t.id === "sd-tay2-dung") { const x = theTay("2"); if (x) { de.the2 = x; de.nl2_cau = ""; tuLuu(); veTatCa(); } }
     else if (t.dataset.cap) { datNL2(kho.find(x => x.ma === t.dataset.cap)); }
@@ -427,6 +429,42 @@
     else if (id === "sd-nl2-cau") { de.nl2_cau = e.target.value; tuLuu(); veTatCa(); }
     else if (id === "sd-tatca") veTrai();
   });
+  function moDanNhanh() {
+    const coLuu = !window.BAN_DEMO && window.KhoBoSung && window.KhoBoSung.themNhap;
+    const hop = document.createElement("div");
+    hop.className = "hop-thoai-nen";
+    hop.innerHTML = `<div class="hop-thoai" role="dialog" aria-modal="true" aria-labelledby="dn-tieu-de">
+      <div class="hang-tieu-de"><h3 id="dn-tieu-de">Dán nhanh ngữ liệu riêng</h3><button class="nut-dong" data-dong aria-label="Đóng">✕</button></div>
+      <label>Tên văn bản<input id="dn-ten"></label>
+      <div class="hang-2"><label>Tác giả<input id="dn-tg"></label>
+        <label>Lớp gợi ý<select id="dn-lop">${(D.DS_LOP || [6, 7, 8, 9, 10, 11, 12]).map(l => `<option value="${l}" ${+l === +de.lop ? "selected" : ""}>Lớp ${l}</option>`).join("")}</select></label></div>
+      <label>Thể loại<select id="dn-tl"><option value="">— Chọn thể loại —</option>${opTheLoai()}</select></label>
+      <label>Nội dung văn bản<textarea id="dn-vb" rows="9" placeholder="Dán văn bản vào đây"></textarea></label>
+      ${coLuu ? `<label class="o-chon"><input type="checkbox" id="dn-luu"> Lưu đồng thời vào Ngữ liệu của tôi (thẻ nháp ở Hàng chờ)</label>` : ""}
+      <div class="hang-nut"><button class="nut-xanh" id="dn-dung">Đưa vào đề</button><button class="nut-bo" data-dong>Hủy</button></div>
+    </div>`;
+    const dong = () => { document.removeEventListener("keydown", phim); hop.remove(); };
+    const phim = e => { if (e.key === "Escape") dong(); };
+    document.addEventListener("keydown", phim);
+    hop.addEventListener("click", e => {
+      if (e.target === hop || e.target.closest("[data-dong]")) return dong();
+      if (e.target.id !== "dn-dung") return;
+      const g = id => (hop.querySelector("#" + id).value || "").trim();
+      const vb = g("dn-vb"), ten = g("dn-ten"), tg = g("dn-tg"), tl = g("dn-tl"), lop = g("dn-lop");
+      if (!vb) { thongBao("Chưa dán nội dung văn bản"); hop.querySelector("#dn-vb").focus(); return; }
+      if (de.the && !confirm("Đề đang có ngữ liệu Đọc hiểu. Thay bằng văn bản vừa dán?")) return;
+      de.the = { kieu: "tay", ma: "", the_loai: tl, nhan_de: ten, loi_dan: "", van_ban: vb, nguon: [tg, ten && "“" + ten + "”"].filter(Boolean).join(", "), nguon_du: false, chu_thich: [], so_chu: D.demChu(vb) };
+      let bao = "Đã đưa ngữ liệu vào đề";
+      if (coLuu && hop.querySelector("#dn-luu").checked) {
+        const ma = window.KhoBoSung.themNhap({ nhan_de: ten, tac_gia: tg, the_loai: tl, lop, van_ban: vb });
+        bao = ma ? `${bao}, đã lưu ${ma} vào Ngữ liệu của tôi` : `${bao}; chưa lưu được vào Ngữ liệu của tôi (bộ nhớ trình duyệt đầy)`;
+      }
+      dong(); tuLuu(); veTatCa(); thongBao(bao);
+    });
+    document.body.appendChild(hop);
+    hop.querySelector("#dn-ten").focus();
+  }
+
   function datNL2(t) {
     if (t && de.the && de.the.ma === t.ma) { thongBao("Ngữ liệu 2 phải khác ngữ liệu Đọc hiểu."); veTrai(); return; }
     de.the2 = t ? chupThe(t) : null; de.nl2_cau = ""; moNH = null; tuLuu(); veTatCa();

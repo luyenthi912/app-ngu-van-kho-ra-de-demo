@@ -27,7 +27,7 @@
   <div class="ten-app">Kho Ngữ liệu Ngữ văn<span class="the-thu">Bản dùng thử</span></div>
   <nav class="phan-app">
     <button data-man="kho" class="dang-chon">Kho Ngữ liệu</button>
-    <button data-man="bo-sung">Bổ sung ngữ liệu</button>
+    <button data-man="bo-sung">Ngữ liệu của tôi</button>
     <button data-man="ra-de">Ra đề</button>
     <button id="nut-nhap-moi" class="nut-vang">+ Nhập ngữ liệu mới</button>
   </nav>
@@ -61,18 +61,18 @@
 <main class="khung" id="man-bo-sung" hidden>
   <section class="hop">
     <div class="hang-tieu-de">
-      <h2>Bổ sung ngữ liệu</h2>
+      <h2>Ngữ liệu của tôi</h2>
       <div class="hang-nut">
-        <button class="nut-chinh" id="mo-form-moi">+ Nhập ngữ liệu mới</button>
         <button class="nut-phu" id="xuat-file">Xuất file sao lưu</button>
         <label class="nut-phu nut-file">Nhập từ file sao lưu<input type="file" id="nhap-file" accept=".json,application/json" hidden></label>
       </div>
     </div>
-    <p class="phu">Thẻ cô nhập được lưu trong trình duyệt của máy này. Nên bấm "Xuất file sao lưu" sau mỗi buổi nhập để giữ một bản trên ổ đĩa.</p>
+    <p class="phu">Dữ liệu Thầy/Cô tự nhập được lưu cục bộ và hoàn toàn riêng tư ngay trên trình duyệt của máy tính này (không tải lên máy chủ chung). Nên bấm 'Xuất file sao lưu' sau mỗi buổi nhập để lưu dự phòng về máy.</p>
+    <p class="phu">Thêm thẻ mới bằng nút màu cam "+ Nhập ngữ liệu mới" trên thanh trên cùng.</p>
     <h3>Hàng chờ (<span id="dem-hang-cho">0</span>)</h3>
     <p class="phu">Thẻ lưu nháp, chưa hiện khi tìm ngữ liệu.</p>
     <ul id="hang-cho" class="ds-bs"></ul>
-    <h3>Đã bổ sung vào kho (<span id="dem-da-bo-sung">0</span>)</h3>
+    <h3>Thẻ đã tự thêm vào kho (<span id="dem-da-bo-sung">0</span>)</h3>
     <ul id="da-bo-sung" class="ds-bs"></ul>
   </section>
   <section id="khung-form"></section>

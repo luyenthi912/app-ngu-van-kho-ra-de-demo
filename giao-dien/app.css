@@ -399,3 +399,22 @@ body.ban-demo #man-ra-de input, body.ban-demo #man-ra-de textarea, body.ban-demo
   body.ban-demo > * { display: none !important; }
   body.ban-demo::before { content: "Tính năng in đề chỉ có ở bản Pro. Liên hệ Zalo 0328961617 hoặc Fanpage Kết Nối Tri Thức EdTech & AI."; display: block; padding: 40px; font: 16pt "Times New Roman", serif; text-align: center; }
 }
+
+/* ---------- Ra đề: hộp thoại "Dán nhanh ngữ liệu riêng" ---------- */
+.nut-dan-nhanh { color: #fff; border: 1px solid var(--vang); border-radius: 6px; padding: 6px 12px; width: 100%; }
+.hop-thoai-nen { position: fixed; inset: 0; background: rgba(20,25,22,.45); overflow: auto; padding: 24px 12px; z-index: 15; display: flex; align-items: flex-start; justify-content: center; }
+.hop-thoai { position: relative; background: #fff; border-radius: 12px; padding: 18px 20px; width: 100%; max-width: 620px; box-sizing: border-box; }
+.hop-thoai .hang-tieu-de { display: flex; justify-content: space-between; align-items: center; }
+.hop-thoai h3 { margin: 0; font-size: 18px; color: var(--xanh); }
+.hop-thoai .nut-dong { position: static; }
+.hop-thoai label { display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--chu-phu); margin: 10px 0; }
+.hop-thoai label.o-chon { flex-direction: row; align-items: center; gap: 6px; font-size: 14px; color: var(--chu); }
+.hop-thoai select, .hop-thoai input:not([type=checkbox]), .hop-thoai textarea { font: inherit; font-size: 15px; color: var(--chu); padding: 6px 8px; border: 1px solid var(--vien); border-radius: 6px; background: #fff; width: 100%; box-sizing: border-box; }
+.hop-thoai .hang-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+.hop-thoai .hang-2 label { margin: 0; }
+.hop-thoai .hang-nut { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+@media (max-width: 760px) {
+  .hop-thoai-nen { padding: 12px 8px; }
+  .hop-thoai { padding: 14px 14px; }
+  .hop-thoai .hang-2 { grid-template-columns: 1fr; }
+}
