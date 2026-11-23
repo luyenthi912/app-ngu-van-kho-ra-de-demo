@@ -138,7 +138,7 @@
     $("#dem-ket-qua").textContent = `${ds.length} thẻ`;
     $("#ket-qua").innerHTML = ds.map(t => `
       <li><button class="dong-the" data-ma="${esc(t.ma)}">
-        <span class="ten">${esc(ngoacKep(t.nhan_de))}</span>
+        <span class="ten">${t.khoa ? "🔒 " : ""}${esc(ngoacKep(t.nhan_de))}</span>
         <span class="tac-gia">${esc((t.nguon && t.nguon.tac_gia) || "Chưa ghi tác giả")}</span>
         <span class="nhan">${esc(t.the_loai || "")}</span>
         <span class="nhan">${D.laTho(t) ? t.so_dong + " dòng" : t.so_chu + " chữ"}</span>
@@ -157,6 +157,14 @@
   function veTatCa() { veLoiVao(); veLocVaKetQua(); }
 
   function moThe(ma) {
+    const nap = window.KhoNapThe, t0 = KHO.find(x => x.ma === ma);
+    if (nap && t0 && !nap.co(ma)) {
+      nap.lay(ma).then(ok => { if (ok) { KHO = D.taiKho(); moTheDu(ma); } });
+      return;
+    }
+    moTheDu(ma);
+  }
+  function moTheDu(ma) {
     const t = KHO.find(x => x.ma === ma);
     if (!t) return;
     const n = t.nguon || {};

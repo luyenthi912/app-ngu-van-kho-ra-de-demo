@@ -83,8 +83,7 @@
 
   function chuanHoa(t, nguonGoc) {
     t.nguon_goc = nguonGoc;
-    t.so_chu = demChu(t.van_ban);
-    t.so_dong = demDong(t.van_ban);
+    if (t.van_ban != null || !t.so_chu) { t.so_chu = demChu(t.van_ban); t.so_dong = demDong(t.van_ban); }
     t.phu_hop = t.phu_hop || [];
     t.lop = [...new Set(t.phu_hop.map(p => Number(p.lop)))].sort((a, b) => a - b);
     t.cap_hoc = [...new Set(t.lop.map(capHocCuaLop))];

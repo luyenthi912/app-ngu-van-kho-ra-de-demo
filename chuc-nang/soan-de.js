@@ -2,6 +2,7 @@
   const $ = s => document.querySelector(s);
   const DEMO = !!window.BAN_DEMO;
   function hopPro() {
+    if (window.KhoPro) return window.KhoPro.mo();
     let o = document.getElementById("hop-pro");
     if (!o) {
       o = document.createElement("div"); o.id = "hop-pro"; o.className = "phu-lop";
@@ -59,7 +60,13 @@
   let khungs = [], de = null, cauSang = null, tabPhai = "ma-tran", moGan = null, moNH = null, kho = [];
 
   const NH = [];
-  (window.NGAN_HANG || []).forEach(lo => lo.cau.forEach(q => NH.push(q)));
+  function napNH() { NH.length = 0; (window.NGAN_HANG || []).forEach(lo => lo.cau.forEach(q => NH.push(q))); }
+  napNH();
+  function canThe(ma, lam) {
+    const nap = window.KhoNapThe;
+    if (!ma || !nap || nap.co(ma)) return lam();
+    nap.lay(ma).then(ok => { if (ok) { napNH(); kho = D.taiKho(); lam(); } else veTrai(); });
+  }
   const mucCua = c => Object.keys(c.muc || {}).filter(m => Number(c.muc[m]) > 0);
   const laDoanVan = q => /^Đảm bảo hình thức đoạn văn/.test((q.y && q.y[0] && q.y[0].nd) || "");
   function cauNL2() {
@@ -195,7 +202,7 @@
     const cungLop = kho.filter(t => t.lop.includes(de.lop) && !khop.includes(t));
     const khac = kho.filter(t => !khop.includes(t) && !cungLop.includes(t));
     const tatCaThe = $("#sd-tatca") ? $("#sd-tatca").checked : false;
-    const opCua = chon => t => `<option value="${esc(t.ma)}" ${chon && chon.ma === t.ma ? "selected" : ""}>${esc(t.nhan_de)} · ${esc((t.nguon || {}).tac_gia || "")} · ${esc(t.the_loai || "")} · ${t.so_chu} chữ</option>`;
+    const opCua = chon => t => `<option value="${esc(t.ma)}" ${chon && chon.ma === t.ma ? "selected" : ""}>${t.khoa ? "🔒 " : ""}${esc(t.nhan_de)} · ${esc((t.nguon || {}).tac_gia || "")} · ${esc(t.the_loai || "")} · ${t.so_chu} chữ</option>`;
     const op = opCua(de.the), op2 = opCua(de.the2);
     const nhomThe = (op_, bo) => [["Khớp bài này", khop], ["Cùng lớp, bài khác", cungLop], ["Lớp khác", tatCaThe ? khac : []]]
       .map(([nhan, ds]) => { ds = ds.filter(t => !bo || t.ma !== bo); return ds.length ? `<optgroup label="${nhan}">${ds.map(op_).join("")}</optgroup>` : ""; }).join("");
@@ -211,7 +218,7 @@
     $("#sd-trai").innerHTML = `
       <div class="trai-dau"><h3>Thiết lập</h3><button class="nut-bo" id="sd-thu" title="Thu gọn hoặc mở cột">${$("#sd-goc").classList.contains("thu-gon") ? "›" : "‹"}</button></div>
       <div class="trai-ruot">
-        <label>Khung đề<select id="sd-khung">${khungs.map(x => `<option value="${esc(x.ma)}" ${x.ma === k.ma ? "selected" : ""}>${esc(x.ten)}${x.can_xac_nhan ? "" : ""}</option>`).join("")}</select></label>        <div class="hang-2">
+        <label>Khung đề<select id="sd-khung">${khungs.map(x => `<option value="${esc(x.ma)}" ${x.ma === k.ma ? "selected" : ""}>${window.KhoPro && window.KhoPro.khungKhoa(x) ? "🔒 " : ""}${esc(x.ten)}${x.can_xac_nhan ? "" : ""}</option>`).join("")}</select></label>        <div class="hang-2">
           <label>Lớp<select id="sd-lop">${lops.map(l => `<option ${l === de.lop ? "selected" : ""}>${l}</option>`).join("")}</select></label>
           <label>Bài<select id="sd-bai">${dsBai.map(b => `<option value="${esc(b.bai)}" ${b.bai === de.bai ? "selected" : ""}>${esc(b.bai)}</option>`).join("")}</select></label>
         </div>
@@ -298,8 +305,8 @@
         ${t.chu_thich && t.chu_thich.length ? `<div class="chu-thich"><b>Chú thích</b><br>${t.chu_thich.map((x, i) => `(${bd + i + 1}) ${esc(x.tu)}: ${esc(x.nghia)}`).join("<br>")}</div>` : ""}</div>`;
     };
     $("#sd-giua").innerHTML = `<div class="hang-hanh-dong">
-        <button class="nut-xanh" id="sd-nut-in">In / Lưu PDF</button>
-        <button class="nut-bo" id="sd-nut-word">Tải file Word (.doc)</button>
+        <button class="nut-xanh" id="sd-nut-in">${DEMO ? "🔒 " : ""}In / Lưu PDF</button>
+        <button class="nut-bo" id="sd-nut-word">${DEMO ? "🔒 " : ""}Tải file Word (.doc)</button>
         <label class="o-chon"><input type="checkbox" id="sd-kem" ${kemBang ? "checked" : ""}> Kèm ma trận, bản đặc tả, đáp án</label>
         ${coNganHang() ? `<button class="nut-bo" id="sd-dien-nhanh" title="Điền các câu còn trống bằng câu hỏi mẫu cùng mức">Điền nhanh từ ngân hàng</button>` : ""}
       </div>
@@ -325,7 +332,7 @@
     if (tabPhai === "ma-tran" || tabPhai === "dac-ta") {
       const kq = tabPhai === "ma-tran" ? window.SinhVanBan.maTran(ctxSinh()) : window.SinhVanBan.dacTa(ctxSinh());
       const cb = tabPhai === "ma-tran" ? kq.canh_bao : kq.chua_gan.length ? ["Chưa gắn yêu cầu cần đạt: " + kq.chua_gan.join(", ") + "."] : [];
-      nd = `<div class="hang-nut"><button class="nut-bo" data-rong="1">Xem rộng</button><button class="nut-xanh" data-chep="1">Sao chép bảng (dán sang Word)</button></div>
+      nd = `<div class="hang-nut"><button class="nut-bo" data-rong="1">Xem rộng</button><button class="nut-xanh" data-chep="1">${DEMO ? "🔒 " : ""}Sao chép bảng (dán sang Word)</button></div>
         ${cb.length ? `<ul class="kt">${cb.map(t => `<li class="nhac">${esc(t)}</li>`).join("")}</ul>` : ""}
         <div class="cuon-ngang">${window.SinhVanBan.html(kq, "app", ctxSinh())}</div>`;
     } else if (tabPhai === "dap-an") {
@@ -354,7 +361,7 @@
       <span class="tt ${lopChu}">Ngữ liệu <b>${esc(dongSoChu())}</b> ${mc ? `<small>mốc ${mc.tu} đến ${mc.den}</small>` : ""}</span>
       <span class="tt ${kt.trang > 2 ? "canh" : ""}" title="Tạm tính ${CHU_MOT_TRANG} chữ một trang, chưa dàn trang thật">Trang ước tính <b>${viet(kt.trang)}</b></span>
       <button class="tt nut-viec ${viec ? (kt.kq.loi ? "loi" : "canh") : "tot"}" id="sd-viec">Việc còn lại <b>${viec}</b></button>
-      <span class="gian"><button class="nut-xanh" id="sd-tt-word">Tải file Word</button></span>`;
+      <span class="gian"><button class="nut-xanh" id="sd-tt-word">${DEMO ? "🔒 " : ""}Tải file Word</button></span>`;
   }
 
   function veTatCa() { veTrai(); veGiua(); vePhai(); veTrangThai(); datSang(false); }
@@ -381,7 +388,7 @@
     else if (t.id === "sd-dan-nhanh") { moDanNhanh(); }
     else if (t.id === "sd-tay-dung") { const x = theTay(""); if (x) { de.the = x; tuLuu(); veTatCa(); } }
     else if (t.id === "sd-tay2-dung") { const x = theTay("2"); if (x) { de.the2 = x; de.nl2_cau = ""; tuLuu(); veTatCa(); } }
-    else if (t.dataset.cap) { datNL2(kho.find(x => x.ma === t.dataset.cap)); }
+    else if (t.dataset.cap) { canThe(t.dataset.cap, () => datNL2(kho.find(x => x.ma === t.dataset.cap))); }
     else if (t.id === "sd-luu") {
       de.ngay_sua = new Date().toISOString().slice(0, 10);
       const ds = doc(K_DA_LUU, []).filter(x => x.id !== de.id).concat([JSON.parse(JSON.stringify(de))]);
@@ -395,7 +402,7 @@
     else if (t.dataset.mo) {
       if (!xacNhanBoNoiDung("Đề đang soạn chưa lưu sẽ mất. Mở đề đã lưu?")) return;
       const x = doc(K_DA_LUU, []).find(e2 => e2.id === t.dataset.mo);
-      if (x && khungCua(x.khung_ma)) { de = x; cauSang = null; moGan = null; tuLuu(); veTatCa(); }
+      if (x && khungCua(x.khung_ma)) { de = x; cauSang = null; moGan = null; tuLuu(); veTatCa(); napNHChoDe(); }
       else thongBao("Không mở được: khung của đề này không còn");
     }
     else if (t.dataset.xoa) {
@@ -412,6 +419,7 @@
   trai.addEventListener("change", e => {
     const id = e.target.id;
     if (id === "sd-khung") {
+      if (window.KhoPro && window.KhoPro.khungKhoa(khungCua(e.target.value))) { window.KhoPro.mo(); veTrai(); return; }
       if (!xacNhanBoNoiDung("Đổi khung sẽ làm lại các câu, nội dung đã gõ sẽ mất. Tiếp tục?")) { veTrai(); return; }
       const k = khungCua(e.target.value);
       de.khung_ma = k.ma; de.cau = k.cau.map(saoCau);
@@ -421,11 +429,14 @@
       de.lop = +e.target.value; de.bai = (baiCuaLop(de.lop)[0] || {}).bai || ""; moGan = null; tuLuu(); veTatCa();
     } else if (id === "sd-bai") { de.bai = e.target.value; moGan = null; tuLuu(); veTatCa(); }
     else if (id === "sd-the") {
-      const t = kho.find(x => x.ma === e.target.value);
-      de.the = t ? chupThe(t) : null;
-      if (de.the && de.the2 && de.the2.ma === de.the.ma) { de.the2 = null; thongBao("Ngữ liệu 2 trùng ngữ liệu Đọc hiểu nên đã bỏ."); }
-      tuLuu(); veTatCa();
-    } else if (id === "sd-the2") datNL2(kho.find(x => x.ma === e.target.value));
+      const ma = e.target.value;
+      canThe(ma, () => {
+        const t = kho.find(x => x.ma === ma);
+        de.the = t ? chupThe(t) : null;
+        if (de.the && de.the2 && de.the2.ma === de.the.ma) { de.the2 = null; thongBao("Ngữ liệu 2 trùng ngữ liệu Đọc hiểu nên đã bỏ."); }
+        tuLuu(); veTatCa();
+      });
+    } else if (id === "sd-the2") { const ma = e.target.value; canThe(ma, () => datNL2(kho.find(x => x.ma === ma))); }
     else if (id === "sd-nl2-cau") { de.nl2_cau = e.target.value; tuLuu(); veTatCa(); }
     else if (id === "sd-tatca") veTrai();
   });
@@ -463,6 +474,13 @@
     });
     document.body.appendChild(hop);
     hop.querySelector("#dn-ten").focus();
+  }
+
+  function napNHChoDe() {
+    const nap = window.KhoNapThe; if (!nap || !de) return;
+    const ds = [de.the, de.the2].filter(t => t && t.kieu === "kho" && t.ma && !nap.co(t.ma)).map(t => t.ma);
+    if (!ds.length) return;
+    Promise.all(ds.map(m => nap.lay(m, true))).then(() => { napNH(); kho = D.taiKho(); veTatCa(); });
   }
 
   function datNL2(t) {
@@ -602,6 +620,7 @@
     });
     h += `<p class="vb-het">HẾT</p>`;
     if (window.BAN_DEMO) h += `<p class="vb-demo">${DONG_DEMO}</p>`;
+    else if (window.BAN_QUYEN) h += `<p class="vb-demo">${esc(window.BAN_QUYEN)}</p>`;
     if (kemBang) {
       const ctx = ctxSinh(), SV = window.SinhVanBan, nt = '<br clear="all" style="page-break-before:always">';
       h += nt + SV.html(SV.maTran(ctx), "word", ctx, { co_chu: "13pt" }) + nt + SV.html(SV.dacTa(ctx), "word", ctx, { co_chu: "13pt" });
@@ -724,5 +743,5 @@
   if (rong > 1100 && rong <= 1366 && de.the) $("#sd-goc").classList.add("thu-gon");
   veTatCa();
 
-  window.KhoSoanDe = { de: () => de, veTatCa };
+  window.KhoSoanDe = { de: () => de, veTatCa, napNHChoDe };
 })();

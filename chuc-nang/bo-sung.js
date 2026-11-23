@@ -9,7 +9,7 @@
   if (window.BAN_DEMO) {
     document.querySelectorAll("[data-man=bo-sung], #nut-nhap-moi").forEach(b => {
       b.textContent = "🔒 " + b.textContent.replace(/^\+ /, "");
-      b.onclick = () => thongBao("Có trong bản đầy đủ");
+      b.onclick = () => window.KhoPro ? window.KhoPro.mo() : thongBao("Có trong bản đầy đủ");
     });
     const moManDemo = ten => {
       document.querySelectorAll("main[id^=man-]").forEach(m => m.hidden = m.id !== "man-" + ten);
