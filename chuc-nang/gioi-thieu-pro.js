@@ -6,7 +6,7 @@
     { ten: "Pro Toàn cấp", cap: "Lớp 6 – 12", may: "2 thiết bị", y: "Mở khóa 100% kho từ lớp 6 đến lớp 12.", noi: true },
     { ten: "Pro Tổ chuyên môn", cap: "Lớp 6 – 12", may: "5 hoặc 10 thiết bị", y: "Toàn bộ quyền lợi Pro Toàn cấp, dùng chung cho cả tổ." }
   ];
-  const CHUNG = ["In đề, lưu PDF, tải file Word đúng thể thức", "Sao chép ma trận, bản đặc tả sang Word", "Ngữ liệu của tôi: tự nhập, lưu riêng, sao lưu ra file", "Thời hạn 1 năm hoặc Trọn đời"];
+  const CHUNG = ["In đề, lưu PDF, tải file Word đúng thể thức", "Sao chép ma trận, bản đặc tả sang Word", "Ngữ liệu của tôi: tự nhập, lưu riêng, sao lưu ra file", "Thời hạn sử dụng: Trọn đời"];
 
   const kieu = document.createElement("style");
   kieu.textContent = `
