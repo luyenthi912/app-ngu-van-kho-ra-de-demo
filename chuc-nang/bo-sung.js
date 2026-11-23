@@ -1,4 +1,3 @@
-// Khu "Bổ sung ngữ liệu": nhập tay thẻ mới, hàng chờ (thẻ nháp), sửa, xóa, sao lưu ra file.
 (function () {
   const D = window.KhoDuLieu;
   const $ = s => document.querySelector(s);
@@ -7,19 +6,24 @@
   const homNay = () => new Date().toISOString().slice(0, 10);
   const thongBao = s => window.KhoManHinh.thongBao(s);
 
-  // Bản demo: khóa khu bổ sung.
   if (window.BAN_DEMO) {
-    document.querySelectorAll("[data-man=bo-sung], [data-man=ra-de], #nut-nhap-moi").forEach(b => {
+    document.querySelectorAll("[data-man=bo-sung], #nut-nhap-moi").forEach(b => {
       b.textContent = "🔒 " + b.textContent.replace(/^\+ /, "");
       b.onclick = () => thongBao("Có trong bản đầy đủ");
     });
+    const moManDemo = ten => {
+      document.querySelectorAll("main[id^=man-]").forEach(m => m.hidden = m.id !== "man-" + ten);
+      document.querySelectorAll("[data-man]").forEach(b => b.classList.toggle("dang-chon", b.dataset.man === ten));
+      window.scrollTo(0, 0);
+    };
+    document.querySelectorAll("[data-man=kho], [data-man=ra-de]").forEach(b => b.onclick = () => moManDemo(b.dataset.man));
+    window.KhoBoSung = { moMan: moManDemo, moForm() {} };
     return;
   }
 
-  let dangSua = null;      // mã thẻ đang sửa, null khi nhập mới
-  let anhTam = [];         // ảnh trang gốc của thẻ đang nhập (đã thu nhỏ)
+  let dangSua = null;
+  let anhTam = [];
 
-  // ---------- Chuyển màn hình ----------
   function moMan(ten) {
     document.querySelectorAll("main[id^=man-]").forEach(m => m.hidden = m.id !== "man-" + ten);
     document.querySelectorAll("[data-man]").forEach(b => b.classList.toggle("dang-chon", b.dataset.man === ten));
@@ -29,7 +33,6 @@
   document.querySelectorAll("[data-man]").forEach(b => b.onclick = () => moMan(b.dataset.man));
   $("#nut-nhap-moi").onclick = () => { moMan("bo-sung"); moForm(null); };
 
-  // ---------- Hàng chờ và danh sách thẻ tự nhập ----------
   function thieuGi(t) {
     const thieu = [];
     if (!t.nhan_de) thieu.push("nhan đề");
@@ -65,7 +68,6 @@
     });
   }
 
-  // ---------- Form ----------
   const TUY_CHON_TIEU_CHI = ["Chưa xét", "Đạt", "Cần sửa", "Không đạt"];
 
   function oChon(ten, ds, gt, rong) {
@@ -220,7 +222,6 @@
     $("#khung-form").scrollIntoView({ behavior: "smooth" });
   }
 
-  // ---------- Ảnh trang gốc ----------
   function thuNho(file) {
     return new Promise((ok, loi) => {
       const r = new FileReader();
@@ -247,7 +248,6 @@
     document.querySelectorAll("[data-bo-anh]").forEach(b => b.onclick = () => { anhTam.splice(+b.dataset.boAnh, 1); veAnh(); });
   }
 
-  // ---------- Đọc form, nhắc thiếu ----------
   function docForm() {
     const f = $("#form-the");
     const g = k => (f.elements[k] ? f.elements[k].value : "").trim();
@@ -303,7 +303,6 @@
     if (t.ghi_chu_chuyen_mon.some(g => !g.nguon)) nhac.push("Có ghi chú chuyên môn chưa ghi nguồn.");
     $("#nhac-nguon").textContent = nhac.join(" ");
 
-    // Trùng trong kho: cùng nhan đề và tác giả, hoặc trùng đoạn mở đầu văn bản.
     const dau = boDau(t.van_ban).slice(0, 80);
     const trung = window.KhoManHinh.dsThe(true).filter(x => x.ma !== dangSua && (
       (t.nhan_de && boDau(x.nhan_de) === boDau(t.nhan_de) && boDau(x.nguon && x.nguon.tac_gia) === boDau(n.tac_gia)) ||
@@ -315,7 +314,6 @@
     document.querySelectorAll("[data-bao-trung]").forEach(o => { o.innerHTML = bao.join("<br>"); o.hidden = !bao.length; });
   }
 
-  // ---------- Lưu ----------
   function maMoi(ds) {
     const so = ds.map(t => parseInt((t.ma || "").replace("TBS-", ""), 10)).filter(x => !isNaN(x));
     return "TBS-" + String((so.length ? Math.max(...so) : 0) + 1).padStart(4, "0");
@@ -345,7 +343,6 @@
     thongBao(nhap ? `Đã lưu nháp ${the.ma} vào hàng chờ` : `Đã lưu ${the.ma} vào kho`);
   }
 
-  // ---------- Sao lưu ----------
   $("#xuat-file").onclick = () => {
     const ds = D.docTuBoSung();
     if (!ds.length) { thongBao("Chưa có thẻ nào để xuất"); return; }

@@ -1,6 +1,4 @@
-// Xem kho yêu cầu cần đạt theo bài (Ra đề, việc 3).
 (function () {
-  if (window.BAN_DEMO) return;
   const $ = s => document.querySelector(s);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const soBai = b => +((b.bai.match(/\d+/) || [0])[0]);

@@ -1,14 +1,13 @@
-// Màn hình Kho: ba lối vào, bộ lọc dùng chung có đếm số thẻ, danh sách kết quả, mở thẻ.
 (function () {
   const D = window.KhoDuLieu;
   let KHO = D.taiKho();
 
   const trangThai = {
-    loiVao: "bai",                       // bai | de_tai | tim
+    loiVao: "bai",
     bai: { cap: "", lop: "", bai: "" },
     deTai: "",
     tuKhoa: "",
-    loc: {}                              // nhóm lọc -> Set giá trị đã chọn
+    loc: {}
   };
 
   const $ = s => document.querySelector(s);
@@ -21,7 +20,6 @@
     { khoa: "de_tai", ten: "Đề tài", cay: D.CAY_DE_TAI, lay: t => t.de_tai }
   ];
 
-  // ---------- Lối vào ----------
   function khopLoiVao(t) {
     const s = trangThai;
     if (s.loiVao === "bai") {
@@ -53,7 +51,6 @@
     });
   }
 
-  // ---------- Vẽ lối vào ----------
   function veLoiVao() {
     document.querySelectorAll(".loi-vao button").forEach(b => b.classList.toggle("dang-chon", b.dataset.loi === trangThai.loiVao));
     const o = $("#o-loi-vao");
@@ -84,7 +81,6 @@
     }
   }
 
-  // ---------- Vẽ bộ lọc ----------
   function oChon(khoa, v, n, chon) {
     return `<label class="${n ? "" : "mo"}"><input type="checkbox" data-nhom="${khoa}" value="${esc(v)}" ${chon.has(v) ? "checked" : ""}> ${esc(v)} <span class="so">(${n})</span></label>`;
   }
@@ -95,7 +91,6 @@
       const dem = {};
       ds.forEach(t => g.lay(t).forEach(v => dem[v] = (dem[v] || 0) + 1));
       if (g.cay) {
-        // Giá trị lạ (không có trong cây) gom vào nhóm "Khác".
         const trongCay = new Set(g.cay.flatMap(n => n.con));
         const la = [...new Set(KHO.flatMap(g.lay))].filter(v => !trongCay.has(v));
         const cay = la.length ? [...g.cay, { ten: "Khác", con: la }] : g.cay;
@@ -133,10 +128,9 @@
     $("#dem-loc").textContent = soDangLoc ? ` (${soDangLoc} đang chọn)` : "";
   }
 
-  // ---------- Vẽ kết quả ----------
   function veKetQua(ds) {
     ds = ds.slice().sort((a, b) => {
-      const d = (a.da_dung.length ? 1 : 0) - (b.da_dung.length ? 1 : 0);   // chưa dùng lên trước
+      const d = (a.da_dung.length ? 1 : 0) - (b.da_dung.length ? 1 : 0);
       if (d) return d;
       if (trangThai.loiVao === "de_tai") return (a.lop[0] || 0) - (b.lop[0] || 0);
       return a.ma.localeCompare(b.ma);
@@ -162,7 +156,6 @@
   }
   function veTatCa() { veLoiVao(); veLocVaKetQua(); }
 
-  // ---------- Mở thẻ ----------
   function moThe(ma) {
     const t = KHO.find(x => x.ma === ma);
     if (!t) return;
@@ -258,7 +251,6 @@
     clearTimeout(henGio); henGio = setTimeout(() => o.hidden = true, 2200);
   }
 
-  // ---------- Gắn sự kiện ----------
   document.querySelectorAll(".loi-vao button").forEach(b => b.onclick = () => { trangThai.loiVao = b.dataset.loi; veTatCa(); });
   $("#xoa-loc").onclick = () => { trangThai.loc = {}; veLocVaKetQua(); };
   $("#dong-the").onclick = () => $("#man-the").hidden = true;
@@ -271,7 +263,6 @@
     dsThe(kemNhap) { return kemNhap ? KHO.concat(D.docTuBoSung().filter(t => t.nhap)) : KHO; },
     thongBao, moThe
   };
-  // Điện thoại: bộ lọc thu gọn sẵn để danh sách thẻ hiện ngay, bấm "Bộ lọc" mới mở ra.
   if (window.matchMedia("(max-width: 760px)").matches) $(".bo-loc details").open = false;
   veTatCa();
 })();

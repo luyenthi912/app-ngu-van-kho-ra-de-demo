@@ -1,6 +1,4 @@
-// Phần Ra đề, việc 2: xem khung đề mẫu, nhân bản thành khung riêng, sửa và tự kiểm tra điểm, tỉ lệ mức độ.
 (function () {
-  if (window.BAN_DEMO) return;
   const $ = s => document.querySelector(s);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const thongBao = s => window.KhoManHinh.thongBao(s);
@@ -14,7 +12,6 @@
 
   let dangChon = (window.KHUNG_MAU || [])[0] ? window.KHUNG_MAU[0].ma : null;
 
-  // ---------- Tính và kiểm tra ----------
   function kiemTra(k) {
     const loi = [], ghi = [];
     const tong = so(k.cau.reduce((a, c) => a + Number(c.diem || 0), 0));
@@ -42,12 +39,11 @@
     return { loi, ghi, tong, theoMuc };
   }
 
-  // ---------- Vẽ ----------
   function ve() {
     const ds = tatCa();
     if (!ds.find(k => k.ma === dangChon)) dangChon = ds[0] && ds[0].ma;
     $("#ds-khung").innerHTML = ds.map(k => `<li><button class="dong-khung ${k.ma === dangChon ? "dang-chon" : ""}" data-khung="${esc(k.ma)}">
-      <b>${esc(k.ten)}</b><span class="phu">${k.thoi_gian} phút · ${k.cau.length} câu${k.rieng ? " · khung riêng" : ""}${k.nhap ? " · nháp" : ""}${k.can_xac_nhan ? " · chờ xác nhận" : ""}</span></button></li>`).join("");
+      <b>${esc(k.ten)}</b><span class="phu">${k.thoi_gian} phút · ${k.cau.length} câu${k.rieng ? " · khung riêng" : ""}${k.nhap ? " · nháp" : ""}${k.can_xac_nhan ? "" : ""}</span></button></li>`).join("");
     document.querySelectorAll("[data-khung]").forEach(b => b.onclick = () => { dangChon = b.dataset.khung; ve(); });
     const k = ds.find(x => x.ma === dangChon);
     $("#chi-tiet-khung").innerHTML = k ? veKhung(k) : "";
@@ -76,8 +72,8 @@
           ${sua ? `<button class="nut-phu" id="luu-khung">Lưu khung</button><button class="nut-phu nut-xoa" id="xoa-khung">Xóa khung</button>` : ""}
         </div>
       </div>
-      ${k.nhap ? `<p class="o-bao-trung">Khung nháp: chưa có nguồn đối chiếu. Cô bấm "Nhân bản thành khung riêng" rồi điền số câu, điểm, mức độ theo khung của trường.</p>` : ""}
-      ${k.can_xac_nhan ? `<p class="o-bao-trung">Khung này lập theo cấu trúc đề minh họa của Bộ, cô đối chiếu lại với đề minh họa mới nhất trước khi dùng.</p>` : ""}
+      ${k.nhap ? `<p class="o-bao-trung">Khung nháp: chưa có nguồn đối chiếu. Thầy cô bấm "Nhân bản thành khung riêng" rồi điền số câu, điểm, mức độ theo khung của trường.</p>` : ""}
+      ${k.can_xac_nhan ? `<p class="o-bao-trung">Khung này lập theo cấu trúc đề minh họa của Bộ, thầy cô nên đối chiếu lại với đề minh họa mới nhất trước khi dùng.</p>` : ""}
       <dl class="thong-tin-khung">
         <dt>Loại đề</dt><dd>${esc(k.loai)}</dd>
         <dt>Lớp</dt><dd>${esc((k.lop || []).join(", "))}</dd>
@@ -98,7 +94,6 @@
       </div>`;
   }
 
-  // ---------- Sửa khung riêng ----------
   function ganSuKien(k) {
     $("#nhan-ban").onclick = () => {
       const ds = docRieng();
@@ -109,7 +104,7 @@
       ban.nguon = "Nhân bản từ khung “" + k.ten + "”";
       if (!ban.phan.length) ban.phan = [{ ten: "Đọc hiểu", diem: 6 }, { ten: "Viết", diem: 4 }];
       ds.push(ban); ghiRieng(ds); dangChon = ban.ma; ve();
-      thongBao("Đã tạo khung riêng, cô sửa rồi bấm Lưu khung");
+      thongBao("Đã tạo khung riêng, thầy cô sửa rồi bấm Lưu khung");
     };
     if (!k.rieng) return;
     const docVao = () => {

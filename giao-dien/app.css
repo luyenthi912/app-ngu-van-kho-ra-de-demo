@@ -383,3 +383,19 @@ button { font: inherit; cursor: pointer; }
 .nh-cau details { margin: 4px 0 6px; }
 .nh-cau summary { cursor: pointer; color: var(--xanh); font-size: 13px; }
 .nh-da { font-size: 13.5px; line-height: 1.45; padding: 4px 0 0 8px; border-left: 3px solid var(--vien); margin-top: 4px; }
+
+/* ---------- Bản demo: hộp mời bản Pro, chặn bôi đen ở màn Ra đề, chặn in ---------- */
+.hop-pro { position: relative; background: #fff; border-radius: 12px; max-width: 560px; width: 100%; margin-top: 12vh; padding: 30px 26px 24px; box-shadow: 0 10px 34px rgba(0,0,0,.3); border-top: 6px solid #BA7517; }
+.hop-pro h3 { margin: 0 0 10px; color: #0F6E56; font-size: 20px; line-height: 1.35; }
+.hop-pro p { margin: 0 0 18px; color: #3d4441; line-height: 1.55; }
+.hang-nut-pro { display: flex; gap: 10px; flex-wrap: wrap; }
+.hang-nut-pro a { flex: 1 1 210px; text-align: center; padding: 11px 14px; border-radius: 8px; color: #fff; font-weight: 600; text-decoration: none; }
+.hang-nut-pro .nut-fb { background: #1877F2; }
+.hang-nut-pro .nut-zalo { background: #0068FF; }
+.hang-nut-pro a:hover { filter: brightness(1.08); }
+body.ban-demo #man-ra-de { -webkit-user-select: none; user-select: none; }
+body.ban-demo #man-ra-de input, body.ban-demo #man-ra-de textarea, body.ban-demo #man-ra-de select { -webkit-user-select: text; user-select: text; }
+@media print {
+  body.ban-demo > * { display: none !important; }
+  body.ban-demo::before { content: "Tính năng in đề chỉ có ở bản Pro. Liên hệ Zalo 0328961617 hoặc Fanpage Kết Nối Tri Thức EdTech & AI."; display: block; padding: 40px; font: 16pt "Times New Roman", serif; text-align: center; }
+}

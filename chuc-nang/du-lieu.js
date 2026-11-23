@@ -1,4 +1,3 @@
-// Đọc kho thẻ (các lô gói sẵn + thẻ cô tự bổ sung), đếm chữ, ghép dòng nguồn.
 (function () {
   const KHOA_TU_BO_SUNG = "kho_ngu_lieu_the_tu_bo_sung";
 
@@ -14,7 +13,6 @@
 
   const DS_LOP = [6, 7, 8, 9, 10, 11, 12];
 
-  // Đề tài = phạm vi đời sống được phản ánh, chia nhóm. Cảm hứng, thông điệp ghi ở ô "Chủ đề" của thẻ.
   const CAY_DE_TAI = [
     { ten: "Gia đình", con: ["Người mẹ", "Người cha", "Ông bà", "Anh chị em", "Tình cảm gia đình"] },
     { ten: "Quê hương, đất nước", con: ["Quê hương, làng quê", "Đất nước", "Biển đảo", "Miền núi, dân tộc thiểu số", "Phố phường, đô thị"] },
@@ -28,7 +26,6 @@
   ];
   const DS_DE_TAI = CAY_DE_TAI.flatMap(n => n.con);
 
-  // Cấp học chứa lớp; thể loại chia nhóm lớn. Thẻ chỉ ghi lớp và thể loại cụ thể (lá của cây).
   const CAY_LOP = [
     { ten: "THCS", con: ["Lớp 6", "Lớp 7", "Lớp 8", "Lớp 9"] },
     { ten: "THPT", con: ["Lớp 10", "Lớp 11", "Lớp 12"] }
@@ -43,7 +40,6 @@
     { ten: "Nghị luận", con: ["Nghị luận xã hội", "Nghị luận văn học", "Nghị luận trung đại (chiếu, cáo, hịch)"] },
     { ten: "Văn bản thông tin", con: ["Văn bản thông tin"] }
   ];
-  // Tên bài theo mục 12 bản mô tả app Kho (lớp 6, 7, 8 cần soát lại với sách in).
   const TEN_BAI = {
     6: ["Tôi và các bạn", "Gõ cửa trái tim", "Yêu thương và chia sẻ", "Quê hương yêu dấu", "Những nẻo đường xứ sở", "Chuyện kể về những người anh hùng", "Thế giới cổ tích", "Khác biệt và gần gũi", "Trái Đất - ngôi nhà chung", "Cuốn sách tôi yêu"],
     7: ["Bầu trời tuổi thơ", "Khúc nhạc tâm hồn", "Cội nguồn yêu thương", "Giai điệu đất nước", "Màu sắc trăm miền", "Bài học cuộc sống", "Thế giới viễn tưởng", "Trải nghiệm để trưởng thành", "Hòa điệu với tự nhiên", "Trang sách và cuộc sống"],
@@ -62,7 +58,6 @@
     const n = CAY_THE_LOAI.find(g => g.con.includes(tl));
     return n ? n.ten : "";
   }
-  // Thơ, ca dao, truyện thơ đếm theo dòng.
   function laTho(t) {
     return ["Thơ", "Ca dao, tục ngữ"].includes(nhomTheLoai(t.the_loai)) || /^Truyện thơ/.test(t.the_loai || "");
   }
@@ -75,7 +70,6 @@
     localStorage.setItem(KHOA_TU_BO_SUNG, JSON.stringify(ds));
   }
 
-  // "Chữ" theo cách đếm tiếng Việt: mỗi tiếng cách nhau bởi khoảng trắng, có ít nhất một chữ cái hoặc số.
   function demChu(vb) {
     if (!vb) return 0;
     return vb.split(/\s+/).filter(t => /[\p{L}\p{N}]/u.test(t)).length;
@@ -108,7 +102,6 @@
     return ds;
   }
 
-  // Ghép các ô nguồn thành một dòng; ô trống bỏ qua, không tự điền.
   function dongNguon(n) {
     if (!n) return "";
     const p = [];
@@ -124,13 +117,11 @@
     return p.join(", ");
   }
 
-  // ---------- Đối chiếu danh mục SGK ----------
   const chuan = x => String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/[^a-z0-9]+/g, " ").trim();
   function cungTacGia(a, b) {
     a = chuan(a); b = chuan(b);
     return a.length >= 4 && b.length >= 4 && (a.includes(b) || b.includes(a));
   }
-  // Trả về các văn bản SGK có thể trùng. App chỉ gợi ý, người soạn xác nhận.
   function doiChieuSgk(t) {
     const ten = chuan(t.nhan_de), tp = chuan(t.nguon && t.nguon.tac_pham), tg = t.nguon && t.nguon.tac_gia;
     if (!ten && !tp) return [];

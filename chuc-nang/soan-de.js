@@ -1,33 +1,54 @@
-// Phần Ra đề, việc 4: soạn đề ba cột (thiết lập, đề đang soạn, văn bản đi kèm) và thanh trạng thái.
-// Ma trận, bản đặc tả, đáp án ở cột phải hiện số liệu từ đề; bản sinh đầy đủ và bộ kiểm tra độ khớp là việc sau.
 (function () {
-  if (window.BAN_DEMO) return;
   const $ = s => document.querySelector(s);
+  const DEMO = !!window.BAN_DEMO;
+  function hopPro() {
+    let o = document.getElementById("hop-pro");
+    if (!o) {
+      o = document.createElement("div"); o.id = "hop-pro"; o.className = "phu-lop";
+      o.innerHTML = `<div class="hop-pro" role="dialog" aria-modal="true" aria-labelledby="hop-pro-td">
+        <button class="nut-dong" data-dong-pro aria-label="Đóng">✕</button>
+        <h3 id="hop-pro-td">Tính năng xuất file Word chuẩn thể thức chỉ có ở bản Pro</h3>
+        <p>Bản dùng thử cho xem đề, ma trận, bản đặc tả và đáp án ngay trên màn hình. In đề, tải file Word đúng thể thức và sao chép bảng sang Word có trong bản Pro.</p>
+        <div class="hang-nut-pro">
+          <a class="nut-fb" href="https://m.me/KetNoiTriThucEdTechAI" target="_blank" rel="noopener">💬 Nhắn tin Fanpage nhận Bản Pro</a>
+          <a class="nut-zalo" href="https://zalo.me/0328961617" target="_blank" rel="noopener">📱 Nhắn Zalo hỗ trợ: 0328961617</a>
+        </div>
+      </div>`;
+      document.body.appendChild(o);
+      o.onclick = e => { if (e.target === o || e.target.closest("[data-dong-pro]")) o.hidden = true; };
+      document.addEventListener("keydown", e => { if (e.key === "Escape") o.hidden = true; });
+    }
+    o.hidden = false;
+  }
+  if (DEMO) {
+    document.body.classList.add("ban-demo");
+    const goc = document.getElementById("man-ra-de");
+    ["copy", "cut"].forEach(ev => goc.addEventListener(ev, e => { e.preventDefault(); hopPro(); }));
+    goc.addEventListener("contextmenu", e => { if (!e.target.closest("input, textarea, select")) e.preventDefault(); });
+  }
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const D = window.KhoDuLieu;
   const thongBao = s => window.KhoManHinh.thongBao(s);
   const so = x => Math.round(Number(x || 0) * 100) / 100;
   const viet = x => String(so(x)).replace(".", ",");
   const K_HIEN_TAI = "kho_ngu_lieu_de_hien_tai", K_DA_LUU = "kho_ngu_lieu_de_da_luu", K_DAU = "kho_ngu_lieu_dau_trang_de";
-  const CHU_MOT_TRANG = 850;   // ước tính tạm: chữ trên một trang A4 (cỡ 13, dòng đơn, lề hẹp); chưa dàn trang thật
+  const CHU_MOT_TRANG = 850;
   const NHOM_THEO_PHAN = { "Đọc hiểu": ["Đọc", "Tiếng Việt"], "Viết": ["Viết"] };
   const LOP_MUC = { "Nhận biết": "nb", "Thông hiểu": "th", "Vận dụng": "vd", "Vận dụng cao": "vdc" };
 
   const doc = (k, mac) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? mac : v; } catch (e) { return mac; } };
   const ghi = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
 
-  // ---------- Tab con của màn Ra đề ----------
   document.querySelectorAll("#tab-ra-de button").forEach(b => b.onclick = () => {
     document.querySelectorAll("#tab-ra-de button").forEach(x => x.classList.toggle("dang-chon", x === b));
     ["soan", "khung", "yccd"].forEach(t => $("#tab-" + t).hidden = t !== b.dataset.tab);
-    if (b.dataset.tab === "soan" && de) {   // khung riêng có thể vừa được thêm, sửa hoặc xóa ở tab Khung đề
+    if (b.dataset.tab === "soan" && de) {
       napKhung();
       if (!khungCua(de.khung_ma)) { de = deMoi(); cauSang = null; moGan = null; }
       veTatCa();
     }
   });
 
-  // ---------- Dữ liệu dùng chung ----------
   const MA_YCCD = {};
   (window.YCCD || []).forEach(b => b.y.forEach(y => MA_YCCD[y.ma] = Object.assign({ bai: b.bai, lop: b.lop }, y)));
   const soBai = b => +((b.match(/\d+/) || [0])[0]);
@@ -37,14 +58,10 @@
   let dau = Object.assign({ so: "", truong: "", ky: "", tg: "" }, doc(K_DAU, {})), kemBang = false;
   let khungs = [], de = null, cauSang = null, tabPhai = "ma-tran", moGan = null, moNH = null, kho = [];
 
-  // ---------- Ngân hàng câu hỏi mẫu (việc 7, dữ liệu ở kho/cau-hoi) ----------
   const NH = [];
   (window.NGAN_HANG || []).forEach(lo => lo.cau.forEach(q => NH.push(q)));
   const mucCua = c => Object.keys(c.muc || {}).filter(m => Number(c.muc[m]) > 0);
-  // Câu hỏi trong ngân hàng hợp với vị trí câu: cùng thẻ ngữ liệu, cùng phần; đúng mức đứng trước.
-  // Ô đoạn văn của phần Viết (dang "doan-van", khung THCS 5-5 và 4-6) lấy các câu viết đoạn văn của thẻ.
   const laDoanVan = q => /^Đảm bảo hình thức đoạn văn/.test((q.y && q.y[0] && q.y[0].nd) || "");
-  // Ngữ liệu 2 (phần Viết) gắn vào một câu Viết; mặc định câu bài văn (không phải ô đoạn văn) có điểm cao nhất.
   function cauNL2() {
     if (!de.the2) return null;
     const vs = de.cau.filter(c => c.phan === "Viết");
@@ -54,7 +71,6 @@
     return (bai.length ? bai : vs).slice().sort((a, b) => b.diem - a.diem)[0] || null;
   }
   const theCua = c => { const c2 = cauNL2(); return c2 && c2.id === c.id ? de.the2 : de.the; };
-  // Đề so sánh: hai thẻ là cặp ghép trong Kho thì câu Viết gắn ngữ liệu 2 ưu tiên đề so sánh nêu tên cả hai văn bản.
   function laCap() {
     if (!de.the || !de.the2 || de.the.kieu !== "kho" || de.the2.kieu !== "kho") return false;
     const t1 = kho.find(x => x.ma === de.the.ma), t2 = kho.find(x => x.ma === de.the2.ma);
@@ -73,7 +89,6 @@
   }
   const coNganHang = () => [de.the, de.the2].some(t => t && t.kieu === "kho" && NH.some(q => q.the === t.ma));
   const dungO = q => de.cau.find(x => x.nguon_nh === q.ma);
-  // Đổi trọng số các ý ra điểm theo điểm câu; ưu tiên bước 0,25, chỉ dùng 0,125 khi không chia đều được.
   const so3 = x => Math.round(x * 1000) / 1000;
   const diem3 = x => { const d = so3(x); return (Number.isInteger(d) ? d.toFixed(1) : String(d)).replace(".", ","); };
   function chiaDiem(y, diem) {
@@ -90,7 +105,6 @@
     return dong.join("\n");
   }
   function dungCau(c, q) {
-    // Đoạn văn trong ngân hàng viết cho phần Đọc hiểu (5 đến 7 dòng); đặt vào ô đoạn văn phần Viết thì đổi dung lượng.
     if (c.dang === "doan-van") {
       const doi = s => s.replace(/khoảng 5 đến 7 dòng/g, "khoảng 200 chữ");
       q = Object.assign({}, q, { noi_dung: doi(q.noi_dung), y: q.y.map(y => Object.assign({}, y, { nd: doi(y.nd) })) });
@@ -115,7 +129,6 @@
   const daLuu = () => { const x = doc(K_DA_LUU, []).find(e => e.id === de.id); return !!x && JSON.stringify(Object.assign({}, x, { ngay_sua: "" })) === JSON.stringify(Object.assign({}, de, { ngay_sua: "" })); };
   function tuLuu() { ghi(K_HIEN_TAI, de); }
 
-  // ---------- Ngữ liệu ----------
   function nguonDu(n) { return !!(n && n.tac_gia && n.tac_pham && (n.bao || n.sach_tap || n.nxb || n.duong_dan || n.trang)); }
   function chupThe(t) {
     const ct = [];
@@ -127,9 +140,8 @@
     return { kieu: "kho", ma: t.ma, the_loai: t.the_loai || "", nhan_de: t.nhan_de, loi_dan: t.loi_dan || "", van_ban: t.van_ban || "", nguon: D.dongNguon(t.nguon), nguon_du: nguonDu(t.nguon), chu_thich: ct, so_chu: t.so_chu };
   }
   const soChuNL = t => (t ? D.demChu(t.van_ban) : 0);
-  const soChuThe = () => soChuNL(de.the) + soChuNL(de.the2);   // tổng ngữ liệu 1 và ngữ liệu 2
+  const soChuThe = () => soChuNL(de.the) + soChuNL(de.the2);
   const dongSoChu = () => de.the2 ? `NL1 ${soChuNL(de.the)} + NL2 ${soChuNL(de.the2)} = ${soChuThe()} chữ` : `${soChuThe()} chữ`;
-  // Văn bản tự nhập: thể loại, tác giả, tên tác phẩm và nơi in đăng ghép thành dòng nguồn cho tờ đề, ma trận, bản đặc tả.
   const opTheLoai = () => D.CAY_THE_LOAI.map(g => `<optgroup label="${esc(g.ten)}">${g.con.map(x => `<option>${esc(x)}</option>`).join("")}</optgroup>`).join("");
   const formTay = s => `
           <label>Lời dẫn (nếu có)<textarea id="sd-tay${s}-dan" rows="2"></textarea></label>
@@ -147,7 +159,6 @@
     return { kieu: "tay", ma: "", the_loai: g("tl"), nhan_de: ten, loi_dan: g("dan"), van_ban: vb, nguon, nguon_du: !!(tg && ten && noi), chu_thich: [], so_chu: D.demChu(vb) };
   }
 
-  // ---------- Kiểm tra độ khớp (việc 6, xem ra-de/kiem-tra-khop.js) ----------
   function trungSgk() {
     if (!de.the || de.the.kieu !== "kho") return null;
     const ds = [de.the, de.the2].filter(t => t && t.kieu === "kho").map(x => kho.find(t => t.ma === x.ma)).filter(Boolean);
@@ -163,7 +174,6 @@
     });
     return { kq, tong: kq.tong, trang, viec: kq.loi + kq.nhac };
   }
-  // Ghi chú lỗi ngay trong thẻ câu ở cột giữa
   function veLoiCau(kq) {
     kq = kq || kiemTraDe().kq;
     document.querySelectorAll("#sd-giua [data-loi-cau]").forEach(o => {
@@ -176,7 +186,6 @@
     return Math.ceil(chu / CHU_MOT_TRANG * 2) / 2;
   }
 
-  // ---------- Cột trái ----------
   function veTrai() {
     const k = khungCua(de.khung_ma);
     kho = D.taiKho();
@@ -192,7 +201,6 @@
       .map(([nhan, ds]) => { ds = ds.filter(t => !bo || t.ma !== bo); return ds.length ? `<optgroup label="${nhan}">${ds.map(op_).join("")}</optgroup>` : ""; }).join("");
     const daLuuDs = doc(K_DA_LUU, []);
     const mc = k.moc_chu, n = soChuNL(de.the);
-    // Ngữ liệu 2: gợi ý thẻ ghép cặp của ngữ liệu Đọc hiểu (đề so sánh), chọn câu Viết dùng ngữ liệu 2.
     const t1 = de.the && de.the.kieu === "kho" ? kho.find(x => x.ma === de.the.ma) : null;
     const capGoiY = t1 ? (t1.ghep_cap || []).map(m => kho.find(x => x.ma === m)).filter(x => x && !(de.the2 && de.the2.ma === x.ma)) : [];
     const viets = de.cau.filter(c => c.phan === "Viết"), c2 = cauNL2();
@@ -203,7 +211,7 @@
     $("#sd-trai").innerHTML = `
       <div class="trai-dau"><h3>Thiết lập</h3><button class="nut-bo" id="sd-thu" title="Thu gọn hoặc mở cột">${$("#sd-goc").classList.contains("thu-gon") ? "›" : "‹"}</button></div>
       <div class="trai-ruot">
-        <label>Khung đề<select id="sd-khung">${khungs.map(x => `<option value="${esc(x.ma)}" ${x.ma === k.ma ? "selected" : ""}>${esc(x.ten)}${x.can_xac_nhan ? " (chờ xác nhận)" : ""}</option>`).join("")}</select></label>        <div class="hang-2">
+        <label>Khung đề<select id="sd-khung">${khungs.map(x => `<option value="${esc(x.ma)}" ${x.ma === k.ma ? "selected" : ""}>${esc(x.ten)}${x.can_xac_nhan ? "" : ""}</option>`).join("")}</select></label>        <div class="hang-2">
           <label>Lớp<select id="sd-lop">${lops.map(l => `<option ${l === de.lop ? "selected" : ""}>${l}</option>`).join("")}</select></label>
           <label>Bài<select id="sd-bai">${dsBai.map(b => `<option value="${esc(b.bai)}" ${b.bai === de.bai ? "selected" : ""}>${esc(b.bai)}</option>`).join("")}</select></label>
         </div>
@@ -234,12 +242,11 @@
 
         <h4>Đề đã lưu</h4>
         <div class="hang-nut"><button class="nut-xanh" id="sd-luu">Lưu đề</button><button class="nut-bo" id="sd-moi">Đề mới</button></div>
-        <div class="nho">Đề được tự giữ lại trên máy này khi cô đóng trình duyệt; bấm "Lưu đề" để giữ thành một bản riêng.</div>
+        <div class="nho">Đề được tự giữ lại trên máy này khi đóng trình duyệt; bấm "Lưu đề" để giữ thành một bản riêng.</div>
         ${daLuuDs.map(e => `<div class="dong-luu"><span title="${esc(e.ten)}">${esc(e.ten || "Đề không tên")} · Lớp ${e.lop}</span><span><button class="nut-bo" data-mo="${esc(e.id)}">Mở</button> <button class="nut-bo nut-xoa" data-xoa="${esc(e.id)}">Xóa</button></span></div>`).join("") || `<div class="nho">Chưa có đề nào được lưu.</div>`}
       </div>`;
   }
 
-  // ---------- Cột giữa ----------
   function chipY(ma) {
     const y = MA_YCCD[ma];
     const la = y && !(yCuaBai(de.lop, de.bai).some(z => z.ma === ma));
@@ -280,7 +287,6 @@
   function veGiua() {
     const k = khungCua(de.khung_ma);
     const so_la = ["I", "II", "III", "IV", "V"];
-    // Chú thích của ngữ liệu nào đặt ngay dưới ngữ liệu đó, đánh số nối tiếp (ngữ liệu 2 bắt đầu sau số cuối của ngữ liệu 1).
     const soCT1 = de.the && de.the.chu_thich ? de.the.chu_thich.length : 0, c2 = cauNL2();
     const khoiNgu = (t, nhan, bd) => {
       if (!t) return `<div class="ngu-lieu trong">Chưa chọn ngữ liệu. Chọn từ Kho hoặc dán văn bản ở cột bên trái.</div>`;
@@ -310,7 +316,6 @@
     veLoiCau();
   }
 
-  // ---------- Cột phải ----------
   function vePhai() {
     const k = khungCua(de.khung_ma), kt = kiemTraDe();
     const nhan = [["ma-tran", "Ma trận"], ["dac-ta", "Bản đặc tả"], ["dap-an", "Đáp án"], ["kiem-tra", `Kiểm tra${kt.kq.loi ? " (" + kt.kq.loi + ")" : ""}`]];
@@ -339,7 +344,6 @@
     veLoiCau(kt.kq);
   }
 
-  // ---------- Thanh trạng thái ----------
   function veTrangThai() {
     const k = khungCua(de.khung_ma), kt = kiemTraDe(), n = soChuThe(), mc = k.moc_chu;
     const viec = kt.viec;
@@ -353,9 +357,8 @@
   }
 
   function veTatCa() { veTrai(); veGiua(); vePhai(); veTrangThai(); datSang(false); }
-  function veChay() { tuLuu(); vePhai(); veTrangThai(); datSang(false); }   // không vẽ lại cột giữa để không mất con trỏ khi gõ
+  function veChay() { tuLuu(); vePhai(); veTrangThai(); datSang(false); }
 
-  // ---------- Đồng bộ câu đang chọn giữa cột giữa và cột phải ----------
   function datSang(cuon) {
     document.querySelectorAll("#sd-goc [data-cau]").forEach(e => e.classList.toggle("sang", e.dataset.cau === cauSang));
     if (cuon && cauSang) {
@@ -366,7 +369,6 @@
   function chonCau(id) { if (cauSang !== id) { cauSang = id; datSang(true); } }
   const cauTheoId = id => de.cau.find(c => c.id === id);
 
-  // ---------- Sự kiện ----------
   function xacNhanBoNoiDung(lyDo) { return !coNoiDung(de) || daLuu() || confirm(lyDo); }
   const trai = $("#sd-trai"), giua = $("#sd-giua"), phai = $("#sd-phai");
 
@@ -444,7 +446,7 @@
       if (c.noi_dung.trim() && !confirm("Câu này đã có nội dung. Thay bằng câu hỏi mẫu?")) return;
       if (o && o.id !== c.id && !confirm(`Câu hỏi mẫu này đang dùng ở ${o.phan} câu ${o.so}. Vẫn dùng thêm ở đây?`)) return;
       dungCau(c, q); moNH = null; tuLuu(); veGiua(); vePhai(); veTrangThai(); datSang(false);
-      thongBao("Đã đưa câu hỏi mẫu vào. Cô đọc lại rồi bấm Đã duyệt.");
+      thongBao("Đã đưa câu hỏi mẫu vào. Thầy cô đọc lại rồi bấm Đã duyệt.");
       return;
     }
     if (t.dataset.gan) { moGan = moGan === t.dataset.gan ? null : t.dataset.gan; veGiua(); datSang(false); }
@@ -460,7 +462,6 @@
     else if (el.classList.contains("o-dv")) { c.don_vi = el.value; veChay(); }
     else if (el.classList.contains("o-diem")) {
       const d = parseFloat(el.value); c.diem = isNaN(d) ? 0 : d;
-      // Đáp án lấy từ ngân hàng mà chưa sửa tay thì chia lại điểm theo điểm câu mới
       const q = c.nguon_nh && c.dap_an === c.da_sinh && NH.find(x => x.ma === c.nguon_nh);
       if (q) { c.dap_an = taoDapAn(q, c.diem); c.da_sinh = c.dap_an; }
       if (Object.keys(c.muc).length === 1) c.muc = { [Object.keys(c.muc)[0]]: c.diem };
@@ -514,17 +515,12 @@
       if (q) { dungCau(c, q); n++; }
     });
     tuLuu(); veGiua(); vePhai(); veTrangThai(); datSang(false);
-    thongBao(n ? `Đã điền ${n} câu từ ngân hàng. Cô đọc lại và duyệt từng câu.` : "Không còn câu trống nào có câu hỏi mẫu cùng mức.");
+    thongBao(n ? `Đã điền ${n} câu từ ngân hàng. Thầy cô đọc lại và duyệt từng câu.` : "Không còn câu trống nào có câu hỏi mẫu cùng mức.");
   }
 
-  // ---------- Đầu trang đề, in và tải file Word ----------
-  // Tờ đề để in và xuất Word được dựng lại từ dữ liệu đề, không lấy từ giao diện soạn (có ô nhập, nút, chip yêu cầu).
-  // Dòng thương hiệu chỉ có ở bản xem trên màn hình, không nằm trong chuỗi này nên bản in và file Word luôn sạch.
   const SO_LA = ["I", "II", "III", "IV", "V"];
-  // Bản demo: tờ đề in và file Word giữ một dòng chú thích nhỏ ở cuối. Bản đầy đủ không có dòng này.
   const DONG_DEMO = "Bản dùng thử · Kho Ngữ liệu Ngữ văn – Kết Nối Tri Thức (Zalo: 0328.961.617)";
   const diemChu = x => { const d = so(x); return (Number.isInteger(d) ? d.toFixed(1) : String(d)).replace(".", ","); };
-  // Thơ giữ nguyên dòng, mỗi khổ một đoạn; văn xuôi mỗi dòng là một đoạn, lùi đầu dòng 1,27 cm.
   const laTho = t => /thơ|ca dao|lục bát|hai-cư/i.test((t && t.the_loai) || "");
   const doanVan = (vb, tho) => tho
     ? String(vb || "").split(/\n\s*\n/).map(b => b.trim()).filter(Boolean).map(b => `<p class="vb-kho">${esc(b).replace(/\n/g, "<br>")}</p>`).join("")
@@ -547,7 +543,6 @@
       ${de.cau.map(c => `<tr><td${td}>${esc(c.phan)} ${c.so}</td><td${td}>${diemChu(c.diem)}</td><td${td}>${dongVan(c.dap_an || "")}</td></tr>`).join("")}</table>`;
   }
 
-  // Một ngữ liệu trên tờ đề: lời dẫn, văn bản, nguồn, chú thích ngay dưới (đánh số nối tiếp từ bd + 1).
   function nguLieuHtml(t, bd) {
     let h = `<p><i>Đọc văn bản sau:</i></p>${t.loi_dan ? `<p><i>${dongVan(t.loi_dan)}</i></p>` : ""}${doanVan(t.van_ban, laTho(t))}`;
     if (t.nguon) h += `<p class="vb-nguon">(Nguồn: ${esc(t.nguon)})</p>`;
@@ -563,7 +558,7 @@
       h += `<p class="vb-phan">${SO_LA[i]}. ${esc(p.ten.toUpperCase())} (${diemChu(p.diem)} điểm)</p>`;
       if (p.ten === "Đọc hiểu" && t) h += nguLieuHtml(t, 0);
       de.cau.filter(c => c.phan === p.ten).forEach(c => {
-        if (c2 && c.id === c2.id) h += nguLieuHtml(de.the2, soCT1);   // ngữ liệu 2 in ngay trước câu dùng nó
+        if (c2 && c.id === c2.id) h += nguLieuHtml(de.the2, soCT1);
         h += `<p class="vb-cau"><b>Câu ${c.so} (${diemChu(c.diem)} điểm).</b> ${dongVan(c.noi_dung)}</p>`;
       });
     });
@@ -585,7 +580,6 @@
     return !viec.length || confirm("Đề còn: " + viec.join("; ") + ". Vẫn tiếp tục?");
   }
 
-  // In hoặc lưu PDF: tờ đề sạch được đặt vào #sd-vung-in, CSS @media print ẩn mọi thứ khác.
   function chuanBiIn() {
     let v = $("#sd-vung-in");
     if (!v) { v = document.createElement("div"); v.id = "sd-vung-in"; v.className = "vung-in"; document.body.appendChild(v); }
@@ -594,11 +588,13 @@
   }
   const donIn = () => document.body.classList.remove("dang-in-de");
   window.addEventListener("afterprint", donIn);
-  window.addEventListener("beforeprint", () => {   // Ctrl+P khi đang ở màn Soạn đề cũng in đúng tờ đề
+  window.addEventListener("beforeprint", () => {
     const m = $("#man-ra-de"), tab = $("#tab-soan");
+    if (DEMO) return;
     if (de && m && !m.hidden && tab && !tab.hidden && !document.body.classList.contains("dang-in-de")) chuanBiIn();
   });
   function inDe() {
+    if (DEMO) return hopPro();
     if (!kiemTruocXuat()) return;
     chuanBiIn();
     setTimeout(() => window.print(), 50);
@@ -622,6 +618,7 @@
     .vb-kho { margin-left: 1.27cm; text-align: left; }
     table { border-collapse: collapse; }`;
   function taiWord() {
+    if (DEMO) return hopPro();
     if (!kiemTruocXuat()) return;
     const d = new Date(), ngay = d.getFullYear() + String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0");
     const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
@@ -636,7 +633,6 @@
     thongBao("Đã tải file Word");
   }
 
-  // ---------- Xem rộng và sao chép bảng ----------
   const bangHienTai = kieu => {
     const kq = tabPhai === "ma-tran" ? window.SinhVanBan.maTran(ctxSinh()) : window.SinhVanBan.dacTa(ctxSinh());
     return window.SinhVanBan.html(kq, kieu, ctxSinh());
@@ -654,11 +650,12 @@
     o.hidden = false;
   }
   function saoChepBang() {
+    if (DEMO) return hopPro();
     const h = bangHienTai("word"), tam = document.createElement("div");
     tam.innerHTML = h;
     const thuan = tam.innerText || tam.textContent;
     const xong = () => thongBao("Đã sao chép. Mở Word và dán (Ctrl+V).");
-    const du = () => {   // phương án dự phòng khi trình duyệt không cho ghi bảng nhớ tạm
+    const du = () => {
       tam.style.cssText = "position:fixed;left:-9999px;top:0"; document.body.appendChild(tam);
       const r = document.createRange(); r.selectNodeContents(tam);
       const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
@@ -671,7 +668,6 @@
     } else du();
   }
 
-  // Điện thoại: chọn một trong bốn cột
   function setCot(c) {
     $("#sd-goc").dataset.hien = c;
     document.querySelectorAll("#tab-cot button").forEach(b => b.classList.toggle("dang-chon", b.dataset.cot === c || (c === "phai" && tabPhai === "kiem-tra" && b.dataset.cot === "kiem-tra")));
@@ -682,7 +678,6 @@
     document.querySelectorAll("#tab-cot button").forEach(x => x.classList.toggle("dang-chon", x === b));
   });
 
-  // ---------- Khởi động ----------
   napKhung();
   if (!khungs.length) { $("#sd-giua").innerHTML = `<div class="hop">Chưa có khung đề nào dùng được.</div>`; return; }
   const cu = doc(K_HIEN_TAI, null);

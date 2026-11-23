@@ -1,8 +1,3 @@
-// Danh mục văn bản SGK Ngữ văn (Kết nối tri thức) dùng để cảnh báo trùng.
-// Nguồn: tab "Danh mục văn bản SGK lớp 9 đến 12" trong bản mô tả app Kho, lập theo bảng
-// "Nội dung dạy học" (mục 2.2.1) của Tài liệu tập huấn SGK Ngữ văn 9, 10, 11, 12, NXB Giáo dục Việt Nam, bản tháng 3/2026.
-// Chưa có: lớp 6, 7, 8; văn bản ở phần Ôn tập, Thực hành tiếng Việt, bài Viết tham khảo; sách Chuyên đề.
-// Mỗi dòng: [lớp, bài, tên văn bản, tác giả, tác phẩm gốc nếu văn bản là đoạn trích]
 window.DANH_MUC_SGK = [
   [9, 1, "Chuyện người con gái Nam Xương", "Nguyễn Dữ"],
   [9, 1, "Dế chọi", "Bồ Tùng Linh"],
