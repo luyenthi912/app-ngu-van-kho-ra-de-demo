@@ -180,7 +180,7 @@
       <p class="tac-gia-lon">${esc(n.tac_gia || "Chưa ghi tác giả")}</p>
       <div class="hang-nut">
         <button id="nut-sao-chep" class="nut-chinh">Sao chép</button>
-        <button id="nut-ra-de" class="nut-khoa" title="Sắp có">🔒 Ra đề với ngữ liệu này</button>
+        ${coQuyenRaDe(t) ? `<button id="nut-ra-de" class="nut-chinh nut-ra-de">Ra đề với ngữ liệu này</button>` : `<button id="nut-ra-de" class="nut-khoa">🔒 Ra đề với ngữ liệu này</button>`}
         ${t.nguon_goc === "Tự bổ sung" ? `<button id="nut-sua-the" class="nut-phu">Sửa thẻ</button>` : ""}
       </div>
       ${muc("Văn bản", `
@@ -219,11 +219,29 @@
       ${Object.keys(kd.tieu_chi || {}).length ? `<table class="bang-lop"><thead><tr><th>Tiêu chí</th><th>Kết quả</th></tr></thead><tbody>${D.TIEU_CHI.map(c => `<tr><td>${c.so}. ${c.ten}</td><td>${esc(kd.tieu_chi[c.so] || "Chưa xét")}</td></tr>`).join("")}</tbody></table>` : ""}`)}
     `;
     $("#nut-sao-chep").onclick = () => saoChep(t);
-    $("#nut-ra-de").onclick = () => thongBao("Sắp có");
+    $("#nut-ra-de").onclick = () => raDeVoiThe(t);
     if ($("#nut-sua-the")) $("#nut-sua-the").onclick = () => { $("#man-the").hidden = true; window.KhoBoSung.moMan("bo-sung"); window.KhoBoSung.moForm(t.ma); };
     $("#the-noi-dung").querySelectorAll(".lien-ket").forEach(b => b.onclick = () => moThe(b.dataset.ma));
     $("#man-the").hidden = false;
     $("#man-the").scrollTop = 0;
+  }
+
+  const ngoaiGoi = t => !!(window.KhoPro && t.phu_hop.length && t.phu_hop.every(p => window.KhoPro.lopKhoa(p.lop)));
+  function coQuyenRaDe(t) { return !window.BAN_DEMO && !t.khoa && !ngoaiGoi(t) && !!window.KhoSoanDe; }
+  function raDeVoiThe(t) {
+    if (!coQuyenRaDe(t)) {
+      const g = window.GOI_PRO;
+      if (window.KhoPro) return window.KhoPro.mo(2, g && ngoaiGoi(t)
+        ? `Thẻ “${t.nhan_de}” dành cho lớp ${t.lop.join(", ")}, nằm ngoài gói ${g.ten_goi} đang dùng. Thầy/Cô nâng cấp gói để ra đề với thẻ này.`
+        : "Ra đề với ngữ liệu này có trong bản Pro: bấm một lần là thẻ được nạp sẵn vào đề đang soạn.");
+      return thongBao("Có trong bản Pro");
+    }
+    $("#man-the").hidden = true;
+    window.KhoBoSung.moMan("ra-de");
+    const tabSoan = document.querySelector('#tab-ra-de button[data-tab="soan"]');
+    if (tabSoan) tabSoan.click();
+    window.KhoSoanDe.napTheVaoDe(t.ma);
+    window.scrollTo(0, 0);
   }
 
   function vanBanSaoChep(t) {

@@ -743,5 +743,35 @@
   if (rong > 1100 && rong <= 1366 && de.the) $("#sd-goc").classList.add("thu-gon");
   veTatCa();
 
-  window.KhoSoanDe = { de: () => de, veTatCa, napNHChoDe };
+  function napTheVaoDe(ma) {
+    kho = D.taiKho();
+    canThe(ma, () => {
+      const t = kho.find(x => x.ma === ma);
+      if (!t) return thongBao("Không tìm thấy thẻ trong kho");
+      const pro = window.KhoPro, duocLop = l => !(pro && pro.lopKhoa(l));
+      const lopThe = (t.phu_hop || []).map(p => Number(p.lop)).filter(duocLop);
+      let k = khungCua(de.khung_ma);
+      if (lopThe.length && !lopThe.includes(de.lop)) {
+        const lop = lopThe.find(l => k.lop.includes(l));
+        if (lop) de.lop = lop;
+        else {
+          const k2 = khungs.find(x => !(pro && pro.khungKhoa(x)) && x.lop.some(l => lopThe.includes(l)));
+          if (k2) {
+            if (!xacNhanBoNoiDung(`Khung đề đang chọn không dùng cho lớp ${lopThe.join(", ")}. Đổi sang khung "${k2.ten}"? Các câu đã gõ sẽ mất.`)) return;
+            k = k2; de.khung_ma = k.ma; de.cau = k.cau.map(saoCau); cauSang = null;
+            de.lop = k.lop.find(l => lopThe.includes(l));
+          }
+        }
+      }
+      const p = (t.phu_hop || []).find(x => Number(x.lop) === de.lop);
+      if (p && baiCuaLop(de.lop).some(b => b.bai === p.bai)) de.bai = p.bai;
+      else if (!baiCuaLop(de.lop).some(b => b.bai === de.bai)) de.bai = (baiCuaLop(de.lop)[0] || {}).bai || "";
+      de.the = chupThe(t);
+      if (de.the2 && de.the2.ma === t.ma) { de.the2 = null; de.nl2_cau = ""; }
+      moGan = null; tuLuu(); veTatCa(); setCot("de");
+      thongBao(`Đã nạp “${t.nhan_de}” vào đề đang soạn (lớp ${de.lop})`);
+    });
+  }
+
+  window.KhoSoanDe = { de: () => de, veTatCa, napNHChoDe, napTheVaoDe };
 })();
