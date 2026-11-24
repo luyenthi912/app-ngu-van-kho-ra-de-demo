@@ -1,3 +1,5 @@
 {
-  "cleanUrls": true
+  "redirects": [
+    { "source": "/(.*)", "destination": "https://kho-ngu-van-pro.vercel.app/", "permanent": false }
+  ]
 }
