@@ -64,7 +64,7 @@
   napNH();
   function canThe(ma, lam) {
     const nap = window.KhoNapThe;
-    if (!ma || !nap || nap.co(ma)) return lam();
+    if (!ma || !nap || nap.co(ma)) { if (nap) napNH(); return lam(); }
     nap.lay(ma).then(ok => { if (ok) { napNH(); kho = D.taiKho(); lam(); } else veTrai(); });
   }
   const mucCua = c => Object.keys(c.muc || {}).filter(m => Number(c.muc[m]) > 0);
@@ -236,14 +236,14 @@
         <div class="hang-nut"><button class="nut-vang nut-dan-nhanh" id="sd-dan-nhanh">+ Dán nhanh ngữ liệu riêng</button></div>
         <label>Chọn từ Kho
           <select id="sd-the"><option value="">— Chưa chọn —</option>${nhomThe(op)}</select></label>
-        <label class="o-chon"><input type="checkbox" id="sd-tatca" ${tatCaThe ? "checked" : ""}> Hiện cả thẻ của lớp khác</label>
+        <label class="o-chon"><input type="checkbox" id="sd-tatca" ${tatCaThe ? "checked" : ""}> Hiện cả Ngữ liệu của lớp khác</label>
         ${de.the ? `<div class="o-tom-tat"><b>${esc(de.the.nhan_de || "Văn bản tự nhập")}</b>${de.the.the_loai ? " · " + esc(de.the.the_loai) : ""}<br>${esc(de.the.nguon || "Chưa ghi nguồn")}<br>${n} chữ${mc && !de.the2 ? ` <span class="nho">(mốc ${mc.tu} đến ${mc.den})</span>` : ""}${de.the.nguon_du ? "" : `<br><b style="color:var(--do)">Thiếu nguồn</b>`}
           <div class="hang-nut"><button class="nut-bo" id="sd-bo-the">Bỏ ngữ liệu</button></div></div>` : `<div class="nho">Chưa chọn ngữ liệu.</div>`}
         <details id="sd-tay"><summary>Dán văn bản tự nhập</summary>${formTay("")}</details>
 
         <h4>Ngữ liệu phần Viết (ngữ liệu 2)</h4>
         <div class="nho">Dùng khi câu Viết dựa vào một văn bản khác ngữ liệu Đọc hiểu: đề phân tích một văn bản khác thể loại, đề so sánh hai văn bản.</div>
-        ${capGoiY.map(x => `<div class="nho">Thẻ ghép cặp của ngữ liệu Đọc hiểu: <b>${esc(x.nhan_de)}</b> <button class="nut-bo" data-cap="${esc(x.ma)}">Dùng làm ngữ liệu 2</button></div>`).join("")}
+        ${capGoiY.map(x => `<div class="nho">Ngữ liệu ghép cặp với ngữ liệu Đọc hiểu: <b>${esc(x.nhan_de)}</b> <button class="nut-bo" data-cap="${esc(x.ma)}">Dùng làm ngữ liệu 2</button></div>`).join("")}
         <label>Chọn từ Kho<select id="sd-the2"><option value="">— Không dùng —</option>${nhomThe(op2, de.the && de.the.ma)}</select></label>
         ${khoiNL2}
         <details id="sd-tay2"><summary>Dán văn bản tự nhập</summary>${formTay("2")}</details>
@@ -280,7 +280,7 @@
       ${moNH === c.id ? `<div class="hop-nh">${nh.map(q => {
         const o = dungO(q);
         return `<div class="nh-cau ${o && o.id !== c.id ? "da-dung" : ""}"><div class="nh-dau"><span class="the-muc muc-${LOP_MUC[q.muc] || "vdc"}">${esc(q.muc)}</span>
-          <span class="nho">${esc(q.ma)}${q.tv ? " · câu Tiếng Việt" : ""} · ${esc(q.trang_thai_duyet)}${o ? " · đang dùng ở " + esc(o.phan) + " câu " + o.so : ""}</span></div>
+          <span class="nho">${esc(q.ma)}${q.tv ? " · câu Tiếng Việt" : ""}${o ? " · đang dùng ở " + esc(o.phan) + " câu " + o.so : ""}</span></div>
           <div class="nh-nd">${esc(q.noi_dung)}</div>${q.ghi_chu ? `<div class="nho">${esc(q.ghi_chu)}</div>` : ""}
           <details><summary>Xem đáp án theo ${viet(c.diem)} điểm</summary><div class="nh-da">${esc(taoDapAn(q, c.diem)).replace(/\n/g, "<br>")}</div></details>
           <button class="nut-xanh" data-dung="${esc(q.ma)}">Dùng câu này</button></div>`;
@@ -451,7 +451,7 @@
         <label>Lớp gợi ý<select id="dn-lop">${(D.DS_LOP || [6, 7, 8, 9, 10, 11, 12]).map(l => `<option value="${l}" ${+l === +de.lop ? "selected" : ""}>Lớp ${l}</option>`).join("")}</select></label></div>
       <label>Thể loại<select id="dn-tl"><option value="">— Chọn thể loại —</option>${opTheLoai()}</select></label>
       <label>Nội dung văn bản<textarea id="dn-vb" rows="9" placeholder="Dán văn bản vào đây"></textarea></label>
-      ${coLuu ? `<label class="o-chon"><input type="checkbox" id="dn-luu"> Lưu đồng thời vào Ngữ liệu của tôi (thẻ nháp ở Hàng chờ)</label>` : ""}
+      ${coLuu ? `<label class="o-chon"><input type="checkbox" id="dn-luu"> Lưu đồng thời vào Ngữ liệu của tôi (Ngữ liệu nháp ở Hàng chờ)</label>` : ""}
       <div class="hang-nut"><button class="nut-xanh" id="dn-dung">Đưa vào đề</button><button class="nut-bo" data-dong>Hủy</button></div>
     </div>`;
     const dong = () => { document.removeEventListener("keydown", phim); hop.remove(); };
@@ -747,7 +747,7 @@
     kho = D.taiKho();
     canThe(ma, () => {
       const t = kho.find(x => x.ma === ma);
-      if (!t) return thongBao("Không tìm thấy thẻ trong kho");
+      if (!t) return thongBao("Không tìm thấy Ngữ liệu trong kho");
       const pro = window.KhoPro, duocLop = l => !(pro && pro.lopKhoa(l));
       const lopThe = (t.phu_hop || []).map(p => Number(p.lop)).filter(duocLop);
       let k = khungCua(de.khung_ma);
@@ -773,5 +773,25 @@
     });
   }
 
-  window.KhoSoanDe = { de: () => de, veTatCa, napNHChoDe, napTheVaoDe };
+  function moDeMau(ma) {
+    if (!xacNhanBoNoiDung("Đề đang soạn chưa lưu sẽ được thay bằng đề mẫu. Tiếp tục?")) return;
+    kho = D.taiKho();
+    canThe(ma, () => {
+      const t = kho.find(x => x.ma === ma);
+      if (!t) return thongBao("Không tìm thấy Ngữ liệu của đề mẫu");
+      const p = (t.phu_hop || [])[0] || {}, lop = Number(p.lop);
+      const k = khungs.find(x => x.lop.includes(lop) && !x.can_xac_nhan && !(window.KhoPro && window.KhoPro.khungKhoa(x))) || khungs[0];
+      de = deMoi(k);
+      if (k.lop.includes(lop)) de.lop = lop;
+      if (baiCuaLop(de.lop).some(b => b.bai === p.bai)) de.bai = p.bai;
+      de.ten = "Đề mẫu: " + t.nhan_de;
+      de.the = chupThe(t);
+      cauSang = null; moGan = null; tabPhai = "ma-tran";
+      dienNhanh();
+      veTatCa(); setCot("de");
+      thongBao("Đề mẫu đã điền đủ câu hỏi, đáp án. Xem Ma trận, Bản đặc tả, Đáp án ở cột Văn bản đi kèm.");
+    });
+  }
+
+  window.KhoSoanDe = { de: () => de, veTatCa, napNHChoDe, napTheVaoDe, moDeMau };
 })();

@@ -40,7 +40,9 @@ button { font: inherit; cursor: pointer; }
 .bo-loc { background: var(--giay); border: 1px solid var(--vien); border-radius: 10px; padding: 12px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
 .bo-loc summary { font-weight: 600; cursor: pointer; }
 .bo-loc fieldset { border: 0; border-top: 1px solid var(--vien); margin: 10px 0 0; padding: 8px 0 0; }
-.bo-loc legend { font-weight: 600; color: var(--xanh); font-size: 14px; padding: 0; }
+/* Tên nhóm lọc nằm dưới đường kẻ: legend thả nổi để đường kẻ của fieldset không chạy ngang giữa dòng chữ */
+.bo-loc legend { font-weight: 600; color: var(--xanh); font-size: 14px; padding: 0; float: left; width: 100%; margin: 0 0 4px; }
+.bo-loc legend + * { clear: both; }
 .bo-loc label { display: block; font-size: 14px; padding: 2px 0; }
 .bo-loc fieldset[data-nhom-loc=de_tai], .bo-loc fieldset[data-nhom-loc=the_loai] { max-height: 320px; overflow: auto; }
 .bo-loc .cha { font-weight: 600; }
@@ -57,10 +59,8 @@ button { font: inherit; cursor: pointer; }
 .dong-the .tac-gia { color: var(--chu-phu); margin-right: 6px; }
 .nhan { font-size: 13px; background: var(--xanh-nhat); color: var(--xanh); border-radius: 4px; padding: 1px 8px; }
 .dau { font-size: 13px; border-radius: 4px; padding: 1px 8px; margin-left: auto; }
-.dau.chua { background: #EEF6EA; color: #2E6B1F; }
 .dau.trung { background: #FCE8E6; color: var(--do); }
 .dau.trung + .dau { margin-left: 0; }
-.dau.da { background: var(--vang-nhat); color: #8A5410; }
 .trong { padding: 20px; text-align: center; color: var(--chu-phu); }
 
 #man-the { position: fixed; inset: 0; background: rgba(20,25,22,.45); overflow: auto; padding: 24px 12px; z-index: 10; }

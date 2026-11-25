@@ -54,21 +54,20 @@
       </li>`;
     };
     const nhap = ds.filter(t => t.nhap), daLuu = ds.filter(t => !t.nhap);
-    $("#hang-cho").innerHTML = nhap.map(dong).join("") || `<li class="trong">Không có thẻ nào đang chờ.</li>`;
-    $("#da-bo-sung").innerHTML = daLuu.map(dong).join("") || `<li class="trong">Thầy/Cô chưa tự thêm thẻ nào vào kho.</li>`;
+    $("#hang-cho").innerHTML = nhap.map(dong).join("") || `<li class="trong">Không có Ngữ liệu nào đang chờ.</li>`;
+    $("#da-bo-sung").innerHTML = daLuu.map(dong).join("") || `<li class="trong">Thầy/Cô chưa tự thêm Ngữ liệu nào vào kho.</li>`;
     $("#dem-hang-cho").textContent = nhap.length;
     $("#dem-da-bo-sung").textContent = daLuu.length;
     document.querySelectorAll("[data-sua]").forEach(b => b.onclick = () => moForm(b.dataset.sua));
     document.querySelectorAll("[data-xoa]").forEach(b => b.onclick = () => {
       const t = ds.find(x => x.ma === b.dataset.xoa);
-      if (!confirm(`Xóa thẻ ${ngoacKep(t.nhan_de || t.ma)}? Thẻ đã xóa không lấy lại được, trừ khi cô đã xuất file sao lưu.`)) return;
+      if (!confirm(`Xóa Ngữ liệu ${ngoacKep(t.nhan_de || t.ma)}? Ngữ liệu đã xóa không lấy lại được, trừ khi cô đã xuất file sao lưu.`)) return;
       D.ghiTuBoSung(ds.filter(x => x.ma !== t.ma));
       veHangCho(); window.KhoManHinh.taiLai();
-      thongBao("Đã xóa thẻ");
+      thongBao("Đã xóa Ngữ liệu");
     });
   }
 
-  const TUY_CHON_TIEU_CHI = ["Chưa xét", "Đạt", "Cần sửa", "Không đạt"];
 
   function oChon(ten, ds, gt, rong) {
     return `<select name="${ten}">${rong != null ? `<option value="">${rong}</option>` : ""}${ds.map(v => `<option ${v === gt ? "selected" : ""}>${esc(v)}</option>`).join("")}</select>`;
@@ -102,7 +101,6 @@
     const t = ma ? ds.find(x => x.ma === ma) : null;
     dangSua = t ? t.ma : null;
     const n = (t && t.nguon) || {};
-    const kd = (t && t.kiem_dinh) || { ket_qua: "", tieu_chi: {}, viec_can_sua: "" };
     const sgk = (t && t.trung_sgk) || { ket_qua: "Chưa xét", van_ban_sgk: "" };
     const ct = (t && t.chu_thich) || {};
     anhTam = ((t && t.bang_chung && t.bang_chung.anh) || []).slice();
@@ -112,8 +110,8 @@
 
     $("#khung-form").innerHTML = `
     <form id="form-the" autocomplete="off">
-      <h2>${t ? "Sửa thẻ " + esc(t.ma) : "Nhập ngữ liệu mới"}</h2>
-      <p class="phu">Ô có dấu * là bắt buộc khi lưu vào kho. Chưa đủ thì bấm "Lưu nháp", thẻ nằm ở hàng chờ và chưa hiện khi tìm ngữ liệu.</p>
+      <h2>${t ? "Sửa Ngữ liệu " + esc(t.ma) : "Nhập ngữ liệu mới"}</h2>
+      <p class="phu">Ô có dấu * là bắt buộc khi lưu vào kho. Chưa đủ thì bấm "Lưu nháp", Ngữ liệu nằm ở hàng chờ và chưa hiện khi tìm ngữ liệu.</p>
 
       <fieldset><legend>1. Văn bản</legend>
         <label>Nhan đề * <input name="nhan_de" value="${v("nhan_de")}" placeholder="Gõ không cần ngoặc kép, app tự thêm khi hiển thị"></label>
@@ -145,7 +143,7 @@
 
       <fieldset><legend>3. Bằng chứng</legend>
         <label>Ảnh trang sách gốc <input type="file" id="chon-anh" accept="image/*" multiple></label>
-        <p class="phu">Ảnh được thu nhỏ trước khi lưu. Mỗi thẻ nên có 1 đến 3 ảnh.</p>
+        <p class="phu">Ảnh được thu nhỏ trước khi lưu. Mỗi Ngữ liệu nên có 1 đến 3 ảnh.</p>
         <div id="xem-anh" class="xem-anh"></div>
       </fieldset>
 
@@ -162,8 +160,8 @@
         <p class="nhan-o">Lớp phù hợp * <span class="phu">(mỗi lớp kèm bài và tiêu điểm khai thác ở lớp đó)</span></p>
         <div id="ds-lop">${((t && t.phu_hop && t.phu_hop.length) ? t.phu_hop : [null]).map(dongLop).join("")}</div>
         <button type="button" class="nut-phu" id="them-lop">+ Thêm lớp</button>
-        <label>Ghép cặp so sánh với thẻ <select name="ghep_cap" multiple size="4">${window.KhoManHinh.dsThe().filter(x => x.ma !== dangSua).map(x => `<option value="${esc(x.ma)}" ${(t && (t.ghep_cap || []).includes(x.ma)) ? "selected" : ""}>${esc(x.ma)} · ${esc(ngoacKep(x.nhan_de))}</option>`).join("")}</select></label>
-        <p class="phu">Giữ phím Ctrl để chọn nhiều thẻ.</p>
+        <label>Ghép cặp so sánh với Ngữ liệu <select name="ghep_cap" multiple size="4">${window.KhoManHinh.dsThe().filter(x => x.ma !== dangSua).map(x => `<option value="${esc(x.ma)}" ${(t && (t.ghep_cap || []).includes(x.ma)) ? "selected" : ""}>${esc(x.ma)} · ${esc(ngoacKep(x.nhan_de))}</option>`).join("")}</select></label>
+        <p class="phu">Giữ phím Ctrl để chọn nhiều Ngữ liệu.</p>
       </fieldset>
 
       <fieldset><legend>5. Chú thích</legend>
@@ -180,16 +178,11 @@
         <button type="button" class="nut-phu" id="them-ghi-chu">+ Thêm ghi chú</button>
       </fieldset>
 
-      <fieldset><legend>7. Trạng thái</legend>
+      <fieldset><legend>7. Đối chiếu sách giáo khoa</legend>
         <div class="luoi-2">
-          <label>Kiểm định chất lượng ${oChon("kd_ket_qua", ["Dùng được", "Dùng được sau khi sửa", "Loại"], kd.ket_qua, "Chưa kiểm định")}</label>
           <label>Trùng sách giáo khoa ${oChon("sgk_ket_qua", ["Chưa xét", "Không trùng", "Có trùng"], sgk.ket_qua)}</label>
+          <label>Văn bản SGK bị trùng (nếu có) <input name="van_ban_sgk" value="${esc(sgk.van_ban_sgk || "")}"></label>
         </div>
-        <table class="bang-lop"><thead><tr><th>Tiêu chí</th><th>Câu hỏi kiểm định</th><th>Kết quả</th></tr></thead><tbody>
-          ${D.TIEU_CHI.map(c => `<tr><td>${c.so}. ${c.ten}</td><td>${esc(c.hoi)}</td><td>${oChon("tc_" + c.so, TUY_CHON_TIEU_CHI, (kd.tieu_chi || {})[c.so] || "Chưa xét")}</td></tr>`).join("")}
-        </tbody></table>
-        <label>Việc cần sửa <textarea name="viec_can_sua" rows="2" placeholder="Cắt từ đâu đến đâu, lời dẫn cần bổ sung ý gì, chú thích từ nào...">${esc(kd.viec_can_sua || "")}</textarea></label>
-        <label>Văn bản SGK bị trùng (nếu có) <input name="van_ban_sgk" value="${esc(sgk.van_ban_sgk || "")}"></label>
       </fieldset>
 
       <div class="hang-nut thanh-luu">
@@ -255,8 +248,6 @@
     const lapLai = (id, keys) => [...document.querySelectorAll("#" + id + " .dong-lap")].map(d => {
       const o = {}; keys.forEach(k => o[k] = d.querySelector(`[data-f=${k}]`).value.trim()); return o;
     });
-    const tieuChi = {};
-    D.TIEU_CHI.forEach(c => { const x = g("tc_" + c.so); if (x && x !== "Chưa xét") tieuChi[c.so] = x; });
     return {
       nhan_de: g("nhan_de").replace(/^[“"]|[”"]$/g, ""),
       loi_dan: g("loi_dan"),
@@ -277,7 +268,6 @@
         tac_gia_tac_pham: g("tac_gia_tac_pham")
       },
       ghi_chu_chuyen_mon: lapLai("ds-ghi-chu", ["loai", "noi_dung", "nguon"]).filter(x => x.noi_dung),
-      kiem_dinh: { ket_qua: g("kd_ket_qua"), tieu_chi: tieuChi, viec_can_sua: g("viec_can_sua") },
       trung_sgk: { ket_qua: g("sgk_ket_qua") || "Chưa xét", van_ban_sgk: g("van_ban_sgk") }
     };
   }
@@ -310,7 +300,7 @@
     const sgk = D.doiChieuSgk(t);
     const bao = [];
     if (sgk.length) bao.push("<b>Có thể trùng sách giáo khoa:</b> " + sgk.map(x => esc(D.moTaSgk(x))).join("; ") + `. Cô xem lại rồi chọn ở ô "Trùng sách giáo khoa" (mục 7).`);
-    if (trung.length) bao.push("<b>Có thể trùng thẻ đã có trong kho:</b> " + trung.map(x => esc(x.ma + " " + ngoacKep(x.nhan_de))).join("; "));
+    if (trung.length) bao.push("<b>Có thể trùng Ngữ liệu đã có trong kho:</b> " + trung.map(x => esc(x.ma + " " + ngoacKep(x.nhan_de))).join("; "));
     document.querySelectorAll("[data-bao-trung]").forEach(o => { o.innerHTML = bao.join("<br>"); o.hidden = !bao.length; });
   }
 
@@ -322,7 +312,7 @@
     const moi = docForm();
     const thieu = thieuGi(moi);
     if (!nhap && thieu.length) {
-      alert("Chưa lưu vào kho được, còn thiếu: " + thieu.join(", ") + ".\nCô bổ sung hoặc bấm \"Lưu nháp\" để để thẻ ở hàng chờ.");
+      alert("Chưa lưu vào kho được, còn thiếu: " + thieu.join(", ") + ".\nCô bổ sung hoặc bấm \"Lưu nháp\" để đưa Ngữ liệu vào hàng chờ.");
       return;
     }
     const ds = D.docTuBoSung();
@@ -337,7 +327,7 @@
     });
     const sau = cu ? ds.map(x => x.ma === cu.ma ? the : x) : ds.concat([the]);
     try { D.ghiTuBoSung(sau); }
-    catch (e) { alert("Bộ nhớ trình duyệt đã đầy, chưa lưu được. Cô bớt ảnh trang gốc hoặc xuất file sao lưu rồi xóa bớt thẻ cũ."); return; }
+    catch (e) { alert("Bộ nhớ trình duyệt đã đầy, chưa lưu được. Cô bớt ảnh trang gốc hoặc xuất file sao lưu rồi xóa bớt Ngữ liệu cũ."); return; }
     $("#khung-form").innerHTML = ""; dangSua = null;
     veHangCho(); window.KhoManHinh.taiLai();
     thongBao(nhap ? `Đã lưu nháp ${the.ma} vào hàng chờ` : `Đã lưu ${the.ma} vào kho`);
@@ -345,7 +335,7 @@
 
   $("#xuat-file").onclick = () => {
     const ds = D.docTuBoSung();
-    if (!ds.length) { thongBao("Chưa có thẻ nào để xuất"); return; }
+    if (!ds.length) { thongBao("Chưa có Ngữ liệu nào để xuất"); return; }
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([JSON.stringify({ loai: "kho-ngu-lieu-tu-bo-sung", ngay: homNay(), the: ds }, null, 1)], { type: "application/json" }));
     a.download = "Kho tu bo sung " + homNay() + ".json";
@@ -360,12 +350,12 @@
       if (!goi || goi.loai !== "kho-ngu-lieu-tu-bo-sung" || !Array.isArray(goi.the)) { alert("File không đúng định dạng sao lưu của app."); return; }
       const ds = D.docTuBoSung();
       const trungMa = goi.the.filter(t => ds.some(x => x.ma === t.ma)).length;
-      if (!confirm(`File có ${goi.the.length} thẻ` + (trungMa ? `, trong đó ${trungMa} thẻ trùng mã sẽ được thay bằng bản trong file` : "") + ". Nhập vào?")) return;
+      if (!confirm(`File có ${goi.the.length} Ngữ liệu` + (trungMa ? `, trong đó ${trungMa} Ngữ liệu trùng mã sẽ được thay bằng bản trong file` : "") + ". Nhập vào?")) return;
       const theoMa = new Map(ds.map(t => [t.ma, t]));
       goi.the.forEach(t => theoMa.set(t.ma, t));
       try { D.ghiTuBoSung([...theoMa.values()]); } catch (err) { alert("Bộ nhớ trình duyệt đã đầy, chưa nhập được."); return; }
       veHangCho(); window.KhoManHinh.taiLai();
-      thongBao("Đã nhập " + goi.the.length + " thẻ");
+      thongBao("Đã nhập " + goi.the.length + " Ngữ liệu");
     };
     r.readAsText(file);
     e.target.value = "";

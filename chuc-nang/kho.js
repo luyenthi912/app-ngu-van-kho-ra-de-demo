@@ -1,5 +1,10 @@
 (function () {
   const D = window.KhoDuLieu;
+  try {
+    Object.keys(localStorage)
+      .filter(k => /(bo[_-]?loc|trang[_-]?thai|tinh[_-]?trang|da[_-]?dung|cho[_-]?duyet)/i.test(k) && !/^kntt_pro_/.test(k))
+      .forEach(k => localStorage.removeItem(k));
+  } catch (e) {}
   let KHO = D.taiKho();
 
   const trangThai = {
@@ -32,11 +37,20 @@
     if (s.loiVao === "tim") {
       const q = boDau(s.tuKhoa.trim());
       if (!q) return true;
-      const n = t.nguon || {};
-      const chu = [t.nhan_de, n.tac_gia, n.tac_pham, n.sach_tap, n.bao, t.chu_de, t.de_tai.join(" "), t.the_loai, t.van_ban].join(" ");
-      return q.split(/\s+/).every(w => boDau(chu).includes(w));
+      const chu = chuTim(t);
+      return q.split(/\s+/).every(w => chu.includes(w));
     }
     return true;
+  }
+  const TIM_SAN = new WeakMap();
+  function chuTim(t) {
+    let s = TIM_SAN.get(t);
+    if (s === undefined) {
+      const n = t.nguon || {};
+      s = boDau([t.nhan_de, n.tac_gia, n.tac_pham, n.sach_tap, n.bao, t.chu_de, (t.de_tai || []).join(" "), t.the_loai, t.van_ban].join(" "));
+      TIM_SAN.set(t, s);
+    }
+    return s;
   }
   function boDau(s) {
     return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d");
@@ -130,26 +144,37 @@
 
   function veKetQua(ds) {
     ds = ds.slice().sort((a, b) => {
-      const d = (a.da_dung.length ? 1 : 0) - (b.da_dung.length ? 1 : 0);
-      if (d) return d;
+      if (window.BAN_DEMO && !!a.khoa !== !!b.khoa) return a.khoa ? 1 : -1;
       if (trangThai.loiVao === "de_tai") return (a.lop[0] || 0) - (b.lop[0] || 0);
       return a.ma.localeCompare(b.ma);
     });
-    $("#dem-ket-qua").textContent = `${ds.length} thẻ`;
-    $("#ket-qua").innerHTML = ds.map(t => `
+    $("#dem-ket-qua").textContent = `${ds.length} Ngữ liệu`;
+    dsCuoi = ds;
+    const hien = ds.slice(0, soHien);   // kho nhiều thẻ: vẽ từng trang cho nhẹ, bấm "Hiện thêm" để xem tiếp
+    $("#ket-qua").innerHTML = hien.map(t => `
       <li><button class="dong-the" data-ma="${esc(t.ma)}">
         <span class="ten">${t.khoa ? "🔒 " : ""}${esc(ngoacKep(t.nhan_de))}</span>
         <span class="tac-gia">${esc((t.nguon && t.nguon.tac_gia) || "Chưa ghi tác giả")}</span>
         <span class="nhan">${esc(t.the_loai || "")}</span>
         <span class="nhan">${D.laTho(t) ? t.so_dong + " dòng" : t.so_chu + " chữ"}</span>
         <span class="nhan">${t.lop.length ? "Lớp " + t.lop.join(", ") : "Chưa gắn lớp"}</span>
-        ${t.trung_sgk.ket_qua === "Có trùng" || (t.trung_sgk.ket_qua === "Chưa xét" && D.doiChieuSgk(t).length) ? `<span class="dau trung">Có thể trùng SGK</span>` : ""}
-        <span class="dau ${t.da_dung.length ? "da" : "chua"}">${t.da_dung.length ? "Đã dùng" : "Chưa dùng"}</span>
-      </button></li>`).join("") || `<li class="trong">Không có thẻ nào khớp. Thử bỏ bớt bộ lọc.</li>`;
+        ${t.trung_sgk.ket_qua === "Có trùng" || (t.trung_sgk.ket_qua === "Chưa xét" && coTrungSgk(t)) ? `<span class="dau trung">Có thể trùng SGK</span>` : ""}
+        ${window.BAN_DEMO && t.mau ? `<span class="dau mau">Ngữ liệu mẫu</span>` : ""}
+      </button></li>`).join("") || `<li class="trong">Không có Ngữ liệu nào khớp. Thử bỏ bớt bộ lọc.</li>`;
+    if (ds.length > hien.length) {
+      const con = ds.length - hien.length;
+      $("#ket-qua").insertAdjacentHTML("beforeend", `<li class="them-the"><button class="nut-phu" id="hien-them">Hiện thêm ${Math.min(TRANG, con)} Ngữ liệu (còn ${con})</button></li>`);
+      $("#hien-them").onclick = () => { soHien += TRANG; veKetQua(dsCuoi); };
+    }
     $("#ket-qua").querySelectorAll(".dong-the").forEach(b => b.onclick = () => moThe(b.dataset.ma));
   }
+  const TRANG = 100;
+  let soHien = TRANG, dsCuoi = [];
+  const SGK_SAN = new WeakMap();
+  function coTrungSgk(t) { let v = SGK_SAN.get(t); if (v === undefined) { v = D.doiChieuSgk(t).length > 0; SGK_SAN.set(t, v); } return v; }
 
   function veLocVaKetQua() {
+    soHien = TRANG;
     const coso = KHO.filter(khopLoiVao);
     veBoLoc(coso);
     veKetQua(coso.filter(t => khopLoc(t)));
@@ -172,16 +197,19 @@
     const thieuNguon = !n.tac_gia || !(n.duong_dan || n.sach_tap || n.bao);
     const muc = (tieuDe, noiDung) => noiDung ? `<section><h3>${tieuDe}</h3>${noiDung}</section>` : "";
     const ct = t.chu_thich || {};
-    const kd = t.kiem_dinh;
+    const ts = t.trung_sgk || {}, goiY = ts.ket_qua === "Chưa xét" ? D.doiChieuSgk(t) : [];
+    const trungSgk = ts.ket_qua === "Có trùng"
+      ? esc("Có trùng" + (ts.van_ban_sgk ? ": " + ts.van_ban_sgk : ""))
+      : goiY.length ? `<span class="canh-bao">Có thể trùng: ${goiY.map(x => esc(D.moTaSgk(x))).join("; ")}</span>` : "";
 
     $("#the-noi-dung").innerHTML = `
-      <p class="ma-the">${esc(t.ma)} · Lô ${esc(t.lo)} · ${esc(t.trang_thai_duyet || "")}</p>
+      <p class="ma-the">${esc(t.ma)} · Lô ${esc(t.lo)}</p>
       <h2>${esc(ngoacKep(t.nhan_de))}</h2>
       <p class="tac-gia-lon">${esc(n.tac_gia || "Chưa ghi tác giả")}</p>
       <div class="hang-nut">
         <button id="nut-sao-chep" class="nut-chinh">Sao chép</button>
         ${coQuyenRaDe(t) ? `<button id="nut-ra-de" class="nut-chinh nut-ra-de">Ra đề với ngữ liệu này</button>` : `<button id="nut-ra-de" class="nut-khoa">🔒 Ra đề với ngữ liệu này</button>`}
-        ${t.nguon_goc === "Tự bổ sung" ? `<button id="nut-sua-the" class="nut-phu">Sửa thẻ</button>` : ""}
+        ${t.nguon_goc === "Tự bổ sung" ? `<button id="nut-sua-the" class="nut-phu">Sửa Ngữ liệu</button>` : ""}
       </div>
       ${muc("Văn bản", `
         <p class="phu">${esc(t.dang || "")} · ${t.so_chu} chữ${D.laTho(t) ? " · " + t.so_dong + " dòng" : ""}</p>
@@ -198,6 +226,7 @@
         ${t.giai_doan ? `<dt>Giai đoạn</dt><dd>${esc(t.giai_doan)}</dd>` : ""}
         <dt>Cấp học</dt><dd>${esc(t.cap_hoc.join(", "))}</dd>
         <dt>Độ khó</dt><dd>${t.do_kho ? "Bậc " + t.do_kho : ""}</dd>
+        ${trungSgk ? `<dt>Trùng SGK</dt><dd>${trungSgk}</dd>` : ""}
       </dl>
       <table class="bang-lop"><thead><tr><th>Lớp</th><th>Bài</th><th>Tiêu điểm khai thác</th></tr></thead><tbody>
         ${t.phu_hop.map(p => `<tr><td>${p.lop}</td><td>${esc(p.bai)}</td><td>${esc((p.tieu_diem || []).join(", "))}</td></tr>`).join("")}
@@ -209,14 +238,6 @@
         ct.tac_gia_tac_pham ? `<p><b>Tác giả, tác phẩm</b></p><p>${esc(ct.tac_gia_tac_pham)}</p>` : ""
       ].join(""))}
       ${muc("Ghi chú chuyên môn", (t.ghi_chu_chuyen_mon || []).length ? `<ul>${t.ghi_chu_chuyen_mon.map(g => `<li><b>${esc(g.loai)}:</b> ${esc(g.noi_dung)}${g.nguon ? ` <span class="phu">(Nguồn: ${esc(g.nguon)})</span>` : ` <span class="canh-bao">Chưa có nguồn</span>`}</li>`).join("")}</ul>` : "")}
-      ${muc("Trạng thái", `<dl>
-        <dt>Kiểm định</dt><dd>${esc(kd.ket_qua || "Chưa kiểm định")}</dd>
-        ${kd.viec_can_sua ? `<dt>Việc cần sửa</dt><dd>${esc(kd.viec_can_sua)}</dd>` : ""}
-        <dt>Trùng SGK</dt><dd>${esc(t.trung_sgk.ket_qua)}${t.trung_sgk.van_ban_sgk ? ": " + esc(t.trung_sgk.van_ban_sgk) : ""}
-          ${t.trung_sgk.ket_qua === "Chưa xét" && D.doiChieuSgk(t).length ? `<div class="canh-bao">App phát hiện có thể trùng: ${D.doiChieuSgk(t).map(x => esc(D.moTaSgk(x))).join("; ")}</div>` : ""}</dd>
-        <dt>Đã dùng ở đề</dt><dd>${t.da_dung.length ? t.da_dung.map(d => esc(d.de) + " (" + esc(d.ngay) + ")").join("; ") : "Chưa dùng"}</dd>
-      </dl>
-      ${Object.keys(kd.tieu_chi || {}).length ? `<table class="bang-lop"><thead><tr><th>Tiêu chí</th><th>Kết quả</th></tr></thead><tbody>${D.TIEU_CHI.map(c => `<tr><td>${c.so}. ${c.ten}</td><td>${esc(kd.tieu_chi[c.so] || "Chưa xét")}</td></tr>`).join("")}</tbody></table>` : ""}`)}
     `;
     $("#nut-sao-chep").onclick = () => saoChep(t);
     $("#nut-ra-de").onclick = () => raDeVoiThe(t);
@@ -232,8 +253,8 @@
     if (!coQuyenRaDe(t)) {
       const g = window.GOI_PRO;
       if (window.KhoPro) return window.KhoPro.mo(2, g && ngoaiGoi(t)
-        ? `Thẻ “${t.nhan_de}” dành cho lớp ${t.lop.join(", ")}, nằm ngoài gói ${g.ten_goi} đang dùng. Thầy/Cô nâng cấp gói để ra đề với thẻ này.`
-        : "Ra đề với ngữ liệu này có trong bản Pro: bấm một lần là thẻ được nạp sẵn vào đề đang soạn.");
+        ? `Ngữ liệu “${t.nhan_de}” dành cho lớp ${t.lop.join(", ")}, nằm ngoài gói ${g.ten_goi} đang dùng. Thầy/Cô nâng cấp gói để ra đề với Ngữ liệu này.`
+        : "Ra đề với ngữ liệu này có trong bản Pro: bấm một lần là Ngữ liệu được nạp sẵn vào đề đang soạn.");
       return thongBao("Có trong bản Pro");
     }
     $("#man-the").hidden = true;
